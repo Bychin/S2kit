@@ -1,40 +1,3 @@
-/***************************************************************************
-  **************************************************************************
-  
-                           S2kit 1.0
-
-          A lite version of Spherical Harmonic Transform Kit
-
-   Peter Kostelec, Dan Rockmore
-   {geelong,rockmore}@cs.dartmouth.edu
-  
-   Contact: Peter Kostelec
-            geelong@cs.dartmouth.edu
-  
-   Copyright 2004 Peter Kostelec, Dan Rockmore
-
-   This file is part of S2kit.
-
-   S2kit is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-
-   S2kit is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with S2kit; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-   See the accompanying LICENSE file for details.
-  
-  ************************************************************************
-  ************************************************************************/
-
-
 /*
   source file which contains the function that generates the
   weights for a bandwidth bw legendre transform. Basically,
@@ -69,34 +32,29 @@
   bw -> bandwidth of transform
   weights -> pointer to double array of length 4*bw; this
              array will contain the even and odd weights;
-	     even weights start at weight[0], and odd weights
-	     start at weights[2*bw]
+         even weights start at weight[0], and odd weights
+         start at weights[2*bw]
 
 */
 
-void makeweights( int bw,
-		  double *weights )
-{
-  int j, k ;
-  double fudge ;
-  double tmpsum ;
+void makeweights(int bw, double *weights) {
+  int j, k;
+  double fudge;
+  double tmpsum;
 
-  fudge = M_PI/((double)(4*bw)) ;
-  
+  fudge = M_PI / ((double)(4 * bw));
 
-  for ( j = 0 ; j < 2*bw ; j ++ )
-    {
-      tmpsum = 0.0 ;
-      for ( k = 0 ; k < bw ; k ++ )
-	tmpsum += 1./((double)(2*k+1)) *
-	  sin((double)((2*j+1)*(2*k+1))*fudge);
-      tmpsum *= sin((double)(2*j+1)*fudge);
-      tmpsum *= 2./((double) bw) ;
-      
-      weights[j] = tmpsum ;
-      weights[j + 2*bw] = tmpsum * sin((double)(2*j+1)*fudge);
-    }
+  for (j = 0; j < 2 * bw; j++) {
+    tmpsum = 0.0;
+    for (k = 0; k < bw; k++)
+      tmpsum += 1. / ((double)(2 * k + 1)) *
+                sin((double)((2 * j + 1) * (2 * k + 1)) * fudge);
+    tmpsum *= sin((double)(2 * j + 1) * fudge);
+    tmpsum *= 2. / ((double)bw);
 
+    weights[j] = tmpsum;
+    weights[j + 2 * bw] = tmpsum * sin((double)(2 * j + 1) * fudge);
+  }
 }
 
 /********************************************************/
@@ -111,7 +69,7 @@ void makeweights( int bw,
 #include <stdlib.h>
 
 int main( int argc,
-	  char **argv )
+      char **argv )
 {
   int i, bw ;
   double *weights ;
@@ -125,7 +83,7 @@ int main( int argc,
 
   for ( i = 0 ; i < 2*bw ; i ++ )
     printf("%d\t%f\t%f\n",
-	   i, weights[i], weights[i+2*bw]);
+       i, weights[i], weights[i+2*bw]);
 
   free( weights );
 
