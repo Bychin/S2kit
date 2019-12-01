@@ -3,6 +3,8 @@
 #ifndef _FSTSEMI_MEMO_H
 #define _FSTSEMI_MEMO_H
 
+#include <fftw3.h>
+
 #define compmult(a, b, c, d, e, f)                                             \
   (e) = ((a) * (c)) - ((b) * (d));                                             \
   (f) = ((a) * (d)) + ((b) * (c))

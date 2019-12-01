@@ -3,7 +3,6 @@
   weights for a bandwidth bw legendre transform.
 
   see makeweights.c for details.
-
 */
 
 #ifndef _MAKEWEIGHTS_H

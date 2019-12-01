@@ -1,1 +1,7 @@
-/dist
+.idea/
+.vscode/
+bin/
+dist/
+
+.clang-format
+*.o

@@ -61,88 +61,87 @@
 #include "FST_semi_fly.h"
 #include "fftw3.h"
 
-int main(int argc, char **argv) {
-  FILE *fp;
-  int i, bw, size;
-  double *rsignal, *isignal, *rfilter, *ifilter, *rresult, *iresult;
-  double *workspace;
+int main(int argc, char** argv) {
+    FILE* fp;
+    int i, bw, size;
+    double *rsignal, *isignal, *rfilter, *ifilter, *rresult, *iresult;
+    double* workspace;
 
-  if (argc < 5) {
-    fprintf(
-        stdout,
-        "Usage: test_conv_semi_fly signal_file filter_file output_file bw\n");
-    exit(0);
-  }
+    if (argc < 5) {
+        fprintf(stdout, "Usage: test_conv_semi_fly signal_file filter_file "
+                        "output_file bw\n");
+        exit(0);
+    }
 
-  bw = atoi(argv[4]);
-  size = 2 * bw;
+    bw = atoi(argv[4]);
+    size = 2 * bw;
 
-  /*
-    allocate memory
-  */
-  rsignal = (double *)malloc(sizeof(double) * size * size);
-  isignal = (double *)malloc(sizeof(double) * size * size);
-  rfilter = (double *)malloc(sizeof(double) * size * size);
-  ifilter = (double *)malloc(sizeof(double) * size * size);
-  rresult = (double *)malloc(sizeof(double) * size * size);
-  iresult = (double *)malloc(sizeof(double) * size * size);
+    /*
+      allocate memory
+    */
+    rsignal = (double*)malloc(sizeof(double) * size * size);
+    isignal = (double*)malloc(sizeof(double) * size * size);
+    rfilter = (double*)malloc(sizeof(double) * size * size);
+    ifilter = (double*)malloc(sizeof(double) * size * size);
+    rresult = (double*)malloc(sizeof(double) * size * size);
+    iresult = (double*)malloc(sizeof(double) * size * size);
 
-  workspace = (double *)malloc(sizeof(double) * (14 * bw * bw + 26 * bw));
+    workspace = (double*)malloc(sizeof(double) * (14 * bw * bw + 26 * bw));
 
-  /****
-    At this point, check to see if all the memory has been
-    allocated. If it has not, there's no point in going further.
-    ****/
+    /****
+      At this point, check to see if all the memory has been
+      allocated. If it has not, there's no point in going further.
+      ****/
 
-  if ((rsignal == NULL) || (isignal == NULL) || (rfilter == NULL) ||
-      (ifilter == NULL) || (rresult == NULL) || (iresult == NULL) ||
-      (workspace == NULL)) {
-    perror("Error in allocating memory");
-    exit(1);
-  }
+    if ((rsignal == NULL) || (isignal == NULL) || (rfilter == NULL) ||
+        (ifilter == NULL) || (rresult == NULL) || (iresult == NULL) ||
+        (workspace == NULL)) {
+        perror("Error in allocating memory");
+        exit(1);
+    }
 
-  /* read in signal and filter */
-  fprintf(stdout, "Reading signal file...\n");
-  fp = fopen(argv[1], "r");
-  for (i = 0; i < size * size; i++)
-    fscanf(fp, "%lf", rsignal + i);
-  fclose(fp);
+    /* read in signal and filter */
+    fprintf(stdout, "Reading signal file...\n");
+    fp = fopen(argv[1], "r");
+    for (i = 0; i < size * size; i++)
+        fscanf(fp, "%lf", rsignal + i);
+    fclose(fp);
 
-  fprintf(stdout, "Reading filter file...\n");
-  fp = fopen(argv[2], "r");
-  for (i = 0; i < size * size; i++)
-    fscanf(fp, "%lf", rfilter + i);
-  fclose(fp);
+    fprintf(stdout, "Reading filter file...\n");
+    fp = fopen(argv[2], "r");
+    for (i = 0; i < size * size; i++)
+        fscanf(fp, "%lf", rfilter + i);
+    fclose(fp);
 
-  /*
-    since the data are strictly real-valued, I need to zero out
-    the imaginary parts
-  */
-  memset(isignal, 0, sizeof(double) * size * size);
-  memset(ifilter, 0, sizeof(double) * size * size);
+    /*
+      since the data are strictly real-valued, I need to zero out
+      the imaginary parts
+    */
+    memset(isignal, 0, sizeof(double) * size * size);
+    memset(ifilter, 0, sizeof(double) * size * size);
 
-  /* now convolve */
-  fprintf(stdout, "Calling Conv2Sphere_semi_fly()\n");
-  Conv2Sphere_semi_fly(rsignal, isignal, rfilter, ifilter, rresult, iresult, bw,
-                       workspace);
+    /* now convolve */
+    fprintf(stdout, "Calling Conv2Sphere_semi_fly()\n");
+    Conv2Sphere_semi_fly(rsignal, isignal, rfilter, ifilter, rresult, iresult,
+                         bw, workspace);
 
-  /* convolving real functions results in real output,
-     so no need to write out the imaginary array */
+    /* convolving real functions results in real output,
+       so no need to write out the imaginary array */
 
-  fprintf(stdout, "Writing output file...\n");
-  fp = fopen(argv[3], "w");
-  for (i = 0; i < size * size; i++)
-    fprintf(fp, "%.16f\n", rresult[i]);
-  fclose(fp);
+    fprintf(stdout, "Writing output file...\n");
+    fp = fopen(argv[3], "w");
+    for (i = 0; i < size * size; i++)
+        fprintf(fp, "%.16f\n", rresult[i]);
+    fclose(fp);
 
-  /* free memory */
-  free(workspace);
-  free(iresult);
-  free(rresult);
-  free(ifilter);
-  free(rfilter);
-  free(isignal);
-  free(rsignal);
+    /* free memory */
+    free(workspace);
+    free(iresult);
+    free(rresult);
+    free(ifilter);
+    free(rfilter);
+    free(isignal);
+    free(rsignal);
 
-  return 0;
+    return 0;
 }

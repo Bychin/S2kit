@@ -1,37 +1,30 @@
-CC = cc
+CC = gcc
 
-# define WALLCLOCK on the CFLAGS line if want to time
-# walltime and not cpu time (cpu time is default); also
-# define optimization flags suitable for your platform
+FFTWDIR = /usr/local
+FFTWINC = -I$(FFTWDIR)/include
+FFTWLIB = -L$(FFTWDIR)/lib -lfftw3
 
-# define for fftw
-## FFTWINC = -I/net/misc/geelong/local/linux/include
-## FFTWLIB = -L/net/misc/geelong/local/linux/lib -lfftw3
-FFTWINC = -I/usr/include
-FFTWLIB = -L/lib64 -lfftw3
-
-
-## CFLAGS = -O3 -pg ${FFTWINC}
-## CFLAGS = -g -Wall ${FFTWINC}
-CFLAGS = -O3 ${FFTWINC} -m64 -fPIC
+# define WALLCLOCK on the CFLAGS line for walltime instead of cpu time (default)
+# -U__STRICT_ANSI__ - M_PI for GCC
+CFLAGS = -O3 ${FFTWINC} -std=c11 -m64 -fPIC -U__STRICT_ANSI__
 
 LDFLAGS = -lm -m64 -fPIC
 
-# for naive
+# naive
 NAIVESRC = primitive.c pmls.c naive_synthesis.c \
 	makeweights.c csecond.c
 
 NAIVEOBJ = primitive.c pmls.o naive_synthesis.o \
 	makeweights.o csecond.o
 
-# for semi-naive
+# semi-naive
 SEMISRC = pmls.c cospmls.c seminaive.c \
 	csecond.c primitive.c makeweights.c
 
 SEMIOBJ = pmls.o cospmls.o seminaive.o \
 	csecond.o primitive.o makeweights.o
 
-# seminaive spherical transform and convolution
+# semi-naive spherical transform and convolution
 FSTSEMISRC = $(SEMISRC) naive_synthesis.c
 
 FSTSEMIOBJ = $(SEMIOBJ) naive_synthesis.o
@@ -48,29 +41,24 @@ ALLSRC = FST_semi_fly.c FST_semi_memo.c cospmls.c csecond.c \
 	test_semi.c
 
 
-###################################################################
-##################################################################
-######
-######              things that can be made
-######
-##################################################################
-##################################################################
-
-# first some shortcuts
+configure:
+	mkdir -p bin
 
 all:
 	make \
+	configure \
 	legendre \
 	sphere
 
-
 legendre:
 	make \
+	configure \
 	test_naive \
 	test_semi
 
 sphere:
 	make \
+	configure \
 	test_s2_semi_memo \
 	test_s2_semi_memo_for \
 	test_s2_semi_memo_inv \
@@ -81,47 +69,47 @@ sphere:
 depend:
 	makedepend ${FFTWINC} ${ALLSRC}
 
-clean: 
-	rm *.o
+clean:
+	rm -vf *.o
+	rm -vrf ./bin
 
-# now the make definitions for the individual executables
+
+# make definitions for the individual executables
 
 test_naive: $(NAIVEOBJ) test_naive.o
 	$(CC) $(CFLAGS) $(NAIVEOBJ) test_naive.o \
-	$(LDFLAGS) -o test_naive
+	$(LDFLAGS) -o bin/test_naive
 
 test_semi: $(SEMIOBJ) test_semi.o
 	$(CC) $(CFLAGS) $(SEMIOBJ) test_semi.o \
-	${FFTWLIB} $(LDFLAGS) -o test_semi
+	${FFTWLIB} $(LDFLAGS) -o bin/test_semi
 
 test_s2_semi_memo: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo.o
 	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo.o \
-	${FFTWLIB} $(LDFLAGS) -o test_s2_semi_memo
+	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_memo
 
 test_s2_semi_memo_for: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_for.o
 	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_for.o \
-	${FFTWLIB} $(LDFLAGS) -o test_s2_semi_memo_for
+	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_memo_for
 
 test_s2_semi_memo_inv: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_inv.o
 	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_inv.o \
-	${FFTWLIB} $(LDFLAGS) -o test_s2_semi_memo_inv
+	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_memo_inv
 
 test_s2_semi_fly: $(FSTSEMIOBJ) FST_semi_fly.o test_s2_semi_fly.o
 	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_fly.o test_s2_semi_fly.o \
-	${FFTWLIB} $(LDFLAGS) -o test_s2_semi_fly
+	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_fly
 
 test_conv_semi_memo: $(CONVSEMIOBJ) FST_semi_memo.o test_conv_semi_memo.o
 	$(CC) $(CFLAGS) $(CONVSEMIOBJ) FST_semi_memo.o test_conv_semi_memo.o \
-	${FFTWLIB} $(LDFLAGS) -o test_conv_semi_memo
+	${FFTWLIB} $(LDFLAGS) -o bin/test_conv_semi_memo
 
 test_conv_semi_fly: $(CONVSEMIOBJ) FST_semi_fly.o test_conv_semi_fly.o
 	$(CC) $(CFLAGS) $(CONVSEMIOBJ) FST_semi_fly.o test_conv_semi_fly.o \
-	${FFTWLIB} $(LDFLAGS) -o test_conv_semi_fly
+	${FFTWLIB} $(LDFLAGS) -o bin/test_conv_semi_fly
 
 
-# and now for LOTS OF dependencies ...
-
-# DO NOT DELETE THIS LINE -- make depend depends on it.
+# dependencies for make depend
 
 FST_semi_fly.o: primitive.h makeweights.h pmls.h cospmls.h naive_synthesis.h
 FST_semi_fly.o: seminaive.h FST_semi_fly.h
