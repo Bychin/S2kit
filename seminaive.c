@@ -1,19 +1,18 @@
-/* Source code for computing the Legendre transform where
-   projections are carried out in cosine space, i.e., the
-   "seminaive" algorithm.
+/*
+    Source code for computing the Legendre transform where projections are carried out in cosine space,
+    i.e., the "seminaive" algorithm.
 
-   For a description, see the related paper or Sean's thesis.
-
+    For a description, see the related paper or Sean's thesis.
 */
 
-#include "fftw3.h"
 #include <math.h>
 #include <stdio.h>
-#include <string.h> /** for memcpy **/
+#include <string.h>
+
+#include <fftw3.h>
 
 #include "cospmls.h"
 
-/************************************************************************/
 /* InvSemiNaiveReduced computes the inverse Legendre transform
    using the transposed seminaive algorithm.  Note that because
    the Legendre transform is orthogonal, the inverse can be
@@ -83,88 +82,87 @@
 
 */
 
-void InvSemiNaiveReduced(double *coeffs, int bw, int m, double *result,
-                         double *trans_cos_pml_table, double *sin_values,
-                         double *workspace, fftw_plan *fplan) {
-  double *trans_tableptr;
-  double *assoc_offset;
-  int i, j, rowsize;
-  double *p;
-  double *fcos, fcos0, fcos1, fcos2, fcos3;
-  double fudge;
+void InvSemiNaiveReduced(double* coeffs, int bw, int m, double* result, double* trans_cos_pml_table, double* sin_values,
+                         double* workspace, fftw_plan* fplan) {
+    double* trans_tableptr;
+    double* assoc_offset;
+    int i, j, rowsize;
+    double* p;
+    double *fcos, fcos0, fcos1, fcos2, fcos3;
+    double fudge;
 
-  fcos = workspace;
+    fcos = workspace;
 
-  /* for paranoia, zero out arrays */
-  memset(fcos, 0, sizeof(double) * 2 * bw);
-  memset(result, 0, sizeof(double) * 2 * bw);
+    /* for paranoia, zero out arrays */
+    memset(fcos, 0, sizeof(double) * 2 * bw);
+    memset(result, 0, sizeof(double) * 2 * bw);
 
-  trans_tableptr = trans_cos_pml_table;
-  p = trans_cos_pml_table;
+    trans_tableptr = trans_cos_pml_table;
+    p = trans_cos_pml_table;
 
-  /* main loop - compute each value of fcos
+    /* main loop - compute each value of fcos
 
-  Note that all zeroes have been stripped out of the
-  trans_cos_pml_table, so indexing is somewhat complicated.
-  */
+    Note that all zeroes have been stripped out of the
+    trans_cos_pml_table, so indexing is somewhat complicated.
+    */
 
-  for (i = 0; i < bw; i++) {
-    if (i == (bw - 1)) {
-      if (m % 2) {
-        fcos[bw - 1] = 0.0;
-        break;
-      }
+    for (i = 0; i < bw; i++) {
+        if (i == (bw - 1)) {
+            if (m % 2) {
+                fcos[bw - 1] = 0.0;
+                break;
+            }
+        }
+
+        rowsize = Transpose_RowSize(i, m, bw);
+        if (i > m)
+            assoc_offset = coeffs + (i - m) + (m % 2);
+        else
+            assoc_offset = coeffs + (i % 2);
+
+        fcos0 = 0.0;
+        fcos1 = 0.0;
+        fcos2 = 0.0;
+        fcos3 = 0.0;
+
+        for (j = 0; j < rowsize % 4; ++j)
+            fcos0 += assoc_offset[2 * j] * trans_tableptr[j];
+
+        for (; j < rowsize; j += 4) {
+            fcos0 += assoc_offset[2 * j] * trans_tableptr[j];
+            fcos1 += assoc_offset[2 * (j + 1)] * trans_tableptr[j + 1];
+            fcos2 += assoc_offset[2 * (j + 2)] * trans_tableptr[j + 2];
+            fcos3 += assoc_offset[2 * (j + 3)] * trans_tableptr[j + 3];
+        }
+        fcos[i] = fcos0 + fcos1 + fcos2 + fcos3;
+
+        trans_tableptr += rowsize;
     }
 
-    rowsize = Transpose_RowSize(i, m, bw);
-    if (i > m)
-      assoc_offset = coeffs + (i - m) + (m % 2);
-    else
-      assoc_offset = coeffs + (i % 2);
+    /*
+      now we have the cosine series for the result,
+      so now evaluate the cosine series at 2*bw Chebyshev nodes
+    */
 
-    fcos0 = 0.0;
-    fcos1 = 0.0;
-    fcos2 = 0.0;
-    fcos3 = 0.0;
+    /* scale coefficients prior to taking inverse DCT */
+    fudge = 0.5 / sqrt((double)bw);
+    for (j = 1; j < 2 * bw; j++)
+        fcos[j] *= fudge;
+    fcos[0] /= sqrt(2. * ((double)bw));
 
-    for (j = 0; j < rowsize % 4; ++j)
-      fcos0 += assoc_offset[2 * j] * trans_tableptr[j];
+    /* now take the inverse dct */
+    /* NOTE that I am using the guru interface */
+    fftw_execute_r2r(*fplan, fcos, result);
 
-    for (; j < rowsize; j += 4) {
-      fcos0 += assoc_offset[2 * j] * trans_tableptr[j];
-      fcos1 += assoc_offset[2 * (j + 1)] * trans_tableptr[j + 1];
-      fcos2 += assoc_offset[2 * (j + 2)] * trans_tableptr[j + 2];
-      fcos3 += assoc_offset[2 * (j + 3)] * trans_tableptr[j + 3];
+    /* if m is odd, then need to multiply by sin(x) at Chebyshev nodes */
+    if (m % 2) {
+        for (j = 0; j < (2 * bw); j++)
+            result[j] *= sin_values[j];
     }
-    fcos[i] = fcos0 + fcos1 + fcos2 + fcos3;
 
-    trans_tableptr += rowsize;
-  }
+    trans_tableptr = p;
 
-  /*
-    now we have the cosine series for the result,
-    so now evaluate the cosine series at 2*bw Chebyshev nodes
-  */
-
-  /* scale coefficients prior to taking inverse DCT */
-  fudge = 0.5 / sqrt((double)bw);
-  for (j = 1; j < 2 * bw; j++)
-    fcos[j] *= fudge;
-  fcos[0] /= sqrt(2. * ((double)bw));
-
-  /* now take the inverse dct */
-  /* NOTE that I am using the guru interface */
-  fftw_execute_r2r(*fplan, fcos, result);
-
-  /* if m is odd, then need to multiply by sin(x) at Chebyshev nodes */
-  if (m % 2) {
-    for (j = 0; j < (2 * bw); j++)
-      result[j] *= sin_values[j];
-  }
-
-  trans_tableptr = p;
-
-  /* amscray */
+    /* amscray */
 }
 
 /************************************************************************/
@@ -212,110 +210,109 @@ void InvSemiNaiveReduced(double *coeffs, int bw, int m, double *result,
 
 */
 
-void SemiNaiveReduced(double *data, int bw, int m, double *result,
-                      double *workspace, double *cos_pml_table, double *weights,
-                      fftw_plan *fplan) {
-  int i, j, n;
-  double result0, result1, result2, result3;
-  double fudge;
-  double d_bw;
-  int toggle;
-  double *pml_ptr, *weighted_data, *cos_data;
+void SemiNaiveReduced(double* data, int bw, int m, double* result, double* workspace, double* cos_pml_table,
+                      double* weights, fftw_plan* fplan) {
+    int i, j, n;
+    double result0, result1, result2, result3;
+    double fudge;
+    double d_bw;
+    int toggle;
+    double *pml_ptr, *weighted_data, *cos_data;
 
-  n = 2 * bw;
-  d_bw = (double)bw;
+    n = 2 * bw;
+    d_bw = (double)bw;
 
-  weighted_data = workspace;
-  cos_data = weighted_data + (2 * bw);
+    weighted_data = workspace;
+    cos_data = weighted_data + (2 * bw);
 
-  /* for paranoia, zero out the result array */
-  memset(result, 0, sizeof(double) * (bw - m));
+    /* for paranoia, zero out the result array */
+    memset(result, 0, sizeof(double) * (bw - m));
 
-  /*
-    need to apply quadrature weights to the data and compute
-    the cosine transform
-  */
-  if (m % 2)
-    for (i = 0; i < n; ++i)
-      weighted_data[i] = data[i] * weights[2 * bw + i];
-  else
-    for (i = 0; i < n; ++i)
-      weighted_data[i] = data[i] * weights[i];
+    /*
+      need to apply quadrature weights to the data and compute
+      the cosine transform
+    */
+    if (m % 2)
+        for (i = 0; i < n; ++i)
+            weighted_data[i] = data[i] * weights[2 * bw + i];
+    else
+        for (i = 0; i < n; ++i)
+            weighted_data[i] = data[i] * weights[i];
 
-  /*
-    smooth the weighted signal
-  */
+    /*
+      smooth the weighted signal
+    */
 
-  fftw_execute_r2r(*fplan, weighted_data, cos_data);
+    fftw_execute_r2r(*fplan, weighted_data, cos_data);
 
-  /* need to normalize */
-  cos_data[0] *= 0.707106781186547;
-  fudge = 1. / sqrt(2. * ((double)n));
-  for (j = 0; j < n; j++)
-    cos_data[j] *= fudge;
+    /* need to normalize */
+    cos_data[0] *= 0.707106781186547;
+    fudge = 1. / sqrt(2. * ((double)n));
+    for (j = 0; j < n; j++)
+        cos_data[j] *= fudge;
 
-  /*
-    do the projections; Note that the cos_pml_table has
-    had all the zeroes stripped out so the indexing is
-    complicated somewhat
-  */
+    /*
+      do the projections; Note that the cos_pml_table has
+      had all the zeroes stripped out so the indexing is
+      complicated somewhat
+    */
 
-  /******** this is the original loop
+    /******** this is the original loop
 
-  toggle = 0 ;
-  for (i=m; i<bw; i++)
-  {
-  pml_ptr = cos_pml_table + NewTableOffset(m,i);
+    toggle = 0 ;
+    for (i=m; i<bw; i++)
+    {
+    pml_ptr = cos_pml_table + NewTableOffset(m,i);
 
-  if ((m % 2) == 0)
-  {
-  for (j=0; j<(i/2)+1; j++)
-  result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
-  }
-  else
-  {
-  if (((i-m) % 2) == 0)
-  {
-  for (j=0; j<(i/2)+1; j++)
-  result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
-  }
-  else
-  {
-  for (j=0; j<(i/2); j++)
-  result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
-  }
-  }
-
-  toggle = (toggle+1) % 2;
-  }
-
-  *****/
-
-  /******** this is the new loop *********/
-  toggle = 0;
-  for (i = m; i < bw; i++) {
-    pml_ptr = cos_pml_table + NewTableOffset(m, i);
-
-    result0 = 0.0;
-    result1 = 0.0;
-    result2 = 0.0;
-    result3 = 0.0;
-
-    for (j = 0; j < ((i / 2) % 4); ++j)
-      result0 += cos_data[(2 * j) + toggle] * pml_ptr[j];
-
-    for (; j < (i / 2); j += 4) {
-      result0 += cos_data[(2 * j) + toggle] * pml_ptr[j];
-      result1 += cos_data[(2 * (j + 1)) + toggle] * pml_ptr[j + 1];
-      result2 += cos_data[(2 * (j + 2)) + toggle] * pml_ptr[j + 2];
-      result3 += cos_data[(2 * (j + 3)) + toggle] * pml_ptr[j + 3];
+    if ((m % 2) == 0)
+    {
+    for (j=0; j<(i/2)+1; j++)
+    result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
+    }
+    else
+    {
+    if (((i-m) % 2) == 0)
+    {
+    for (j=0; j<(i/2)+1; j++)
+    result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
+    }
+    else
+    {
+    for (j=0; j<(i/2); j++)
+    result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
+    }
     }
 
-    if ((((i - m) % 2) == 0) || ((m % 2) == 0))
-      result0 += cos_data[(2 * (i / 2)) + toggle] * pml_ptr[(i / 2)];
+    toggle = (toggle+1) % 2;
+    }
 
-    result[i - m] = result0 + result1 + result2 + result3;
+    *****/
 
-    toggle = (toggle + 1) % 2;
-  }
+    /******** this is the new loop *********/
+    toggle = 0;
+    for (i = m; i < bw; i++) {
+        pml_ptr = cos_pml_table + NewTableOffset(m, i);
+
+        result0 = 0.0;
+        result1 = 0.0;
+        result2 = 0.0;
+        result3 = 0.0;
+
+        for (j = 0; j < ((i / 2) % 4); ++j)
+            result0 += cos_data[(2 * j) + toggle] * pml_ptr[j];
+
+        for (; j < (i / 2); j += 4) {
+            result0 += cos_data[(2 * j) + toggle] * pml_ptr[j];
+            result1 += cos_data[(2 * (j + 1)) + toggle] * pml_ptr[j + 1];
+            result2 += cos_data[(2 * (j + 2)) + toggle] * pml_ptr[j + 2];
+            result3 += cos_data[(2 * (j + 3)) + toggle] * pml_ptr[j + 3];
+        }
+
+        if ((((i - m) % 2) == 0) || ((m % 2) == 0))
+            result0 += cos_data[(2 * (i / 2)) + toggle] * pml_ptr[(i / 2)];
+
+        result[i - m] = result0 + result1 + result2 + result3;
+
+        toggle = (toggle + 1) % 2;
+    }
 }

@@ -1,56 +1,43 @@
 /*
-  Source code to convolve two real-valued functions defined on the 2-sphere.
-  Uses seminaive algorithms.
+    Source code to convolve two real-valued functions defined on the 2-sphere. Uses seminaive algorithms.
 
-  WILL PRECOMPUTE DATA AS NEEDED, ON THE FLY (that sounds odd,
-  "precompute ... the fly")
+    Will precompute data as needed, on the fly.
 
-  Reads in a function and filter from files specified at
-  shell level, and dumps output into a
-  specified file.
-  Both function and filter must be
-  (size x size) arrays, where
-  size = 2*bandwidth.
+    Reads in a function and filter from files specified at shell level, and dumps output into a specified file.
+    Both function and filter must be (size*size) arrays, where size = 2*bandwidth.
 
-  User specifies bandwidth as fourth argument
+    Sample call:
 
-  Sample call:
+    test_conv_semi_fly signalFile filterFile convolveFile bandwidth
 
-  test_conv_semi_fly signalFile filterFile convolveFile bandwidth
-
-  test_conv_semi_fly s64.dat f64.dat c64.dat 64
+    test_conv_semi_fly s64.dat f64.dat c64.dat 64
 
 
-  In this example, the signal and filter function samples are stored
-  in the files
+    In this example, the signal and filter function samples are stored in the files:
 
-  s64.dat ( signal - for bandwidth = 64 )
-  f64.dat ( filter - for bandwidth = 64 )
+    s64.dat ( signal - for bandwidth = 64 )
+    f64.dat ( filter - for bandwidth = 64 )
 
-  s128.dat ( signal - for bandwidth = 128 )
-  f128.dat ( filter - for bandwidth = 128 )
+    s128.dat ( signal - for bandwidth = 128 )
+    f128.dat ( filter - for bandwidth = 128 )
 
-  The signal is a "noisey" bump on the sphere, and the filter
-  is a smooth, symmetric bump at the north pole
+    The signal is a "noisey" bump on the sphere, and the filter is a smooth, symmetric bump at the north pole.
 
-  The samples for each are in "latitude-major" format. I.e.
-  (theta_0, phi_0)
-  (theta_0, phi_1)
-  (theta_0, phi_2)
-  ...
-  (theta_0, phi_{bw-1})
-  (theta_1, phi_0)
-  (theta_1, phi_1)
-  ...
-  (theta_{bw-1}, phi_{bw-1})
+    The samples for each are in "latitude-major" format. I.e.
+    (theta_0, phi_0)
+    (theta_0, phi_1)
+    (theta_0, phi_2)
+    ...
+    (theta_0, phi_{bw-1})
+    (theta_1, phi_0)
+    (theta_1, phi_1)
+    ...
+    (theta_{bw-1}, phi_{bw-1})
 
-  where theta_k = pi*(2*j+1)/(4*bw)
-        phi_j = 2*pi*k/(2*bw)
+    where theta_k = pi*(2*j+1)/(4*bw)
+          phi_j = 2*pi*k/(2*bw)
 
-
-  The *location* of the maximum value in the output file tells me
-  where the bump is.
-
+    The *location* of the maximum value in the output file tells me where the bump is.
 */
 
 #include <errno.h>
@@ -58,8 +45,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <fftw3.h>
+
 #include "FST_semi_fly.h"
-#include "fftw3.h"
 
 int main(int argc, char** argv) {
     FILE* fp;
@@ -93,9 +81,8 @@ int main(int argc, char** argv) {
       allocated. If it has not, there's no point in going further.
       ****/
 
-    if ((rsignal == NULL) || (isignal == NULL) || (rfilter == NULL) ||
-        (ifilter == NULL) || (rresult == NULL) || (iresult == NULL) ||
-        (workspace == NULL)) {
+    if ((rsignal == NULL) || (isignal == NULL) || (rfilter == NULL) || (ifilter == NULL) || (rresult == NULL) ||
+        (iresult == NULL) || (workspace == NULL)) {
         perror("Error in allocating memory");
         exit(1);
     }
@@ -122,8 +109,7 @@ int main(int argc, char** argv) {
 
     /* now convolve */
     fprintf(stdout, "Calling Conv2Sphere_semi_fly()\n");
-    Conv2Sphere_semi_fly(rsignal, isignal, rfilter, ifilter, rresult, iresult,
-                         bw, workspace);
+    Conv2Sphere_semi_fly(rsignal, isignal, rfilter, ifilter, rresult, iresult, bw, workspace);
 
     /* convolving real functions results in real output,
        so no need to write out the imaginary array */

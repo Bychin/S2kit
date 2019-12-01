@@ -37,7 +37,7 @@ ALLSRC = FST_semi_fly.c FST_semi_memo.c cospmls.c csecond.c \
 	makeweights.c naive_synthesis.c pmls.c primitive.c \
 	seminaive.c test_conv_semi_fly.c test_conv_semi_memo.c \
 	test_naive.c test_s2_semi_fly.c test_s2_semi_memo.c \
-	test_s2_semi_memo_for.c test_s2_semi_memo_inv.c \
+	test_s2_semi_memo_fwd.c test_s2_semi_memo_inv.c \
 	test_semi.c
 
 
@@ -60,7 +60,7 @@ sphere:
 	make \
 	configure \
 	test_s2_semi_memo \
-	test_s2_semi_memo_for \
+	test_s2_semi_memo_fwd \
 	test_s2_semi_memo_inv \
 	test_s2_semi_fly \
 	test_conv_semi_memo \
@@ -88,9 +88,9 @@ test_s2_semi_memo: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo.o
 	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo.o \
 	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_memo
 
-test_s2_semi_memo_for: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_for.o
-	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_for.o \
-	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_memo_for
+test_s2_semi_memo_fwd: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_fwd.o
+	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_fwd.o \
+	${FFTWLIB} $(LDFLAGS) -o bin/test_s2_semi_memo_fwd
 
 test_s2_semi_memo_inv: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_inv.o
 	$(CC) $(CFLAGS) $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_inv.o \
@@ -133,7 +133,7 @@ test_s2_semi_fly.o: makeweights.h FST_semi_fly.h csecond.h
 
 test_s2_semi_memo.o: makeweights.h cospmls.h FST_semi_memo.h csecond.h
 
-test_s2_semi_memo_for.o: makeweights.h cospmls.h FST_semi_memo.h csecond.h
+test_s2_semi_memo_fwd.o: makeweights.h cospmls.h FST_semi_memo.h csecond.h
 
 test_s2_semi_memo_inv.o: makeweights.h cospmls.h FST_semi_memo.h csecond.h
 

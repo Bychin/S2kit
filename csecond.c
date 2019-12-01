@@ -1,20 +1,17 @@
 /*
+    A function used for timing; provided by Mark Taylor.
 
-  a function used for timing; provided by Mark Taylor
+    real*8 second
+    before = second()
+    code_to_time
+    after = second()
+    cpu_time = after - before
 
-      real*8 second
-      before = second()
-      code_to_time
-      after = second()
-      cpu_time = after - before
+    Last written:
+    Timestamp: "1995/11/10 16:52:56 thibaud@kether.cgd.ucar.edu"
+*/
 
- *----------------------------------------------------------------------
- * csecond.c
- *----------------------------------------------------------------------
- * Last written:
- * Time-stamp: "1995/11/10 16:52:56 thibaud@kether.cgd.ucar.edu"
- *----------------------------------------------------------------------
- */
+// TODO: move to utils
 
 #include <limits.h>
 #include <stdio.h>
@@ -42,26 +39,24 @@ double csecond()
 double csecond()
 #endif
 {
-  struct tms buf;
-  static struct tms buf0; /* times structure */
-  static int firstcall = 1;
-  clock_t rv;
-  static clock_t rv0;
+    struct tms buf;
+    static struct tms buf0; /* times structure */
+    static int firstcall = 1;
+    clock_t rv;
+    static clock_t rv0;
 
-  if (firstcall) {
-    firstcall = 0;
-    rv0 = times(&buf0);
-  }
+    if (firstcall) {
+        firstcall = 0;
+        rv0 = times(&buf0);
+    }
 
-  rv = times(&buf);
-  /*    if ( rv < 0 ) {fprintf( stderr, "csecond failed  %d \n",rv ); } */
+    rv = times(&buf);
+    /*    if ( rv < 0 ) {fprintf( stderr, "csecond failed  %d \n",rv ); } */
 #ifdef WALLCLOCK
-  return ((double)(rv - rv0) / (double)DIVIDER);
+    return ((double)(rv - rv0) / (double)DIVIDER);
 #else
-  return ((double)((buf.tms_utime + buf.tms_stime + buf.tms_cutime +
-                    buf.tms_cstime) -
-                   (buf0.tms_utime + buf0.tms_stime + buf0.tms_cutime +
-                    buf0.tms_cstime)) /
-          (double)DIVIDER);
+    return ((double)((buf.tms_utime + buf.tms_stime + buf.tms_cutime + buf.tms_cstime) -
+                     (buf0.tms_utime + buf0.tms_stime + buf0.tms_cutime + buf0.tms_cstime)) /
+            (double)DIVIDER);
 #endif
 }

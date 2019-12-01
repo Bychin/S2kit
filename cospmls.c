@@ -1,12 +1,14 @@
-/* source code for generating cosine transforms
-   of Pml and Gml functions */
+/*
+    Source code for generating cosine transforms of Pml and Gml functions.
+*/
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* to declare memcpy */
+#include <string.h> // memcpy declaration
 
-#include "fftw3.h"
+#include <fftw3.h>
+
 #include "pmls.h"
 #include "primitive.h"
 
@@ -22,35 +24,34 @@
 
 int TableSize(int m, int bw) {
 
-  int k;
-  int fudge, fudge2;
-  int a1, a2, a3;
+    int k;
+    int fudge, fudge2;
+    int a1, a2, a3;
 
-  if (bw % 2) /* if the bandwidth is odd */
-  {
-    k = bw / 2;
-    fudge = (m + 1) % 2;
+    if (bw % 2) { // if the bandwidth is odd
+        k = bw / 2;
+        fudge = (m + 1) % 2;
 
-    a1 = k * (k + 1);
-    a2 = fudge * (k + 1);
+        a1 = k * (k + 1);
+        a2 = fudge * (k + 1);
 
-    fudge2 = m / 2;
-    a3 = fudge2 * (fudge2 + 1);
+        fudge2 = m / 2;
+        a3 = fudge2 * (fudge2 + 1);
 
-  } else /* bandwidth is even */
-  {
-    k = bw / 2;
-    fudge = m % 2;
+    } else { // bandwidth is even
+        k = bw / 2;
+        fudge = m % 2;
 
-    a1 = (k - fudge) * (k - fudge + 1);
-    a2 = fudge * k;
+        a1 = (k - fudge) * (k - fudge + 1);
+        a2 = fudge * k;
 
-    fudge2 = m / 2;
-    a3 = fudge2 * (fudge2 + 1);
-  }
+        fudge2 = m / 2;
+        a3 = fudge2 * (fudge2 + 1);
+    }
 
-  return (a1 + a2 - a3);
+    return (a1 + a2 - a3);
 }
+
 /************************************************************************/
 /* Spharmonic_TableSize(bw) returns an integer value for
    the amount of space necessary to fill out an entire spharmonic
@@ -77,18 +78,18 @@ int TableSize(int m, int bw) {
 */
 
 int Spharmonic_TableSize(int bw) {
-  int m, sum;
+    int m, sum;
 
-  if (bw > 512) {
-    sum = 0;
+    if (bw > 512) {
+        sum = 0;
 
-    for (m = 0; m < bw; m++)
-      sum += TableSize(m, bw);
+        for (m = 0; m < bw; m++)
+            sum += TableSize(m, bw);
 
-    return sum;
-  } else {
-    return ((((4 * (bw * bw * bw)) + (6 * (bw * bw)) - (8 * bw)) / 24) + bw);
-  }
+        return sum;
+    } else {
+        return ((((4 * (bw * bw * bw)) + (6 * (bw * bw)) - (8 * bw)) / 24) + bw);
+    }
 }
 
 /************************************************************************/
@@ -108,14 +109,14 @@ int Spharmonic_TableSize(int bw) {
 
 int Reduced_SpharmonicTableSize(int bw, int m) {
 
-  int i, sum;
+    int i, sum;
 
-  sum = 0;
+    sum = 0;
 
-  for (i = 0; i < m; i++)
-    sum += TableSize(i, bw);
+    for (i = 0; i < m; i++)
+        sum += TableSize(i, bw);
 
-  return sum;
+    return sum;
 }
 
 /************************************************************************/
@@ -126,22 +127,22 @@ int Reduced_SpharmonicTableSize(int bw, int m) {
 */
 
 int NewTableOffset(int m, int l) {
-  int offset;
-  int tm, tl;
+    int offset;
+    int tm, tl;
 
-  if (m % 2) {
-    tl = l - 1;
-    tm = m - 1;
-  } else {
-    tl = l;
-    tm = m;
-  }
+    if (m % 2) {
+        tl = l - 1;
+        tm = m - 1;
+    } else {
+        tl = l;
+        tm = m;
+    }
 
-  offset = ((tl / 2) * ((tl / 2) + 1)) - ((tm / 2) * ((tm / 2) + 1));
-  if (tl % 2)
-    offset += (tl / 2) + 1;
+    offset = ((tl / 2) * ((tl / 2) + 1)) - ((tm / 2) * ((tm / 2) + 1));
+    if (tl % 2)
+        offset += (tl / 2) + 1;
 
-  return offset;
+    return offset;
 }
 
 /************************************************************************/
@@ -175,108 +176,108 @@ int NewTableOffset(int m, int l) {
 
 */
 
-void CosPmlTableGen(int bw, int m, double *tablespace, double *workspace) {
-  double *prev, *prevprev, *temp1, *temp2, *temp3, *temp4;
-  double *x_i, *eval_args;
-  double *tableptr, *cosres;
-  int i, j, k;
+void CosPmlTableGen(int bw, int m, double* tablespace, double* workspace) {
+    double *prev, *prevprev, *temp1, *temp2, *temp3, *temp4;
+    double *x_i, *eval_args;
+    double *tableptr, *cosres;
+    int i, j, k;
 
-  /* fftw stuff now */
-  double fudge;
-  fftw_plan p;
+    /* fftw stuff now */
+    double fudge;
+    fftw_plan p;
 
-  prevprev = workspace;
-  prev = prevprev + bw;
-  temp1 = prev + bw;
-  temp2 = temp1 + bw;
-  temp3 = temp2 + bw;
-  temp4 = temp3 + bw;
-  x_i = temp4 + bw;
-  eval_args = x_i + bw;
-  cosres = eval_args + bw;
+    prevprev = workspace;
+    prev = prevprev + bw;
+    temp1 = prev + bw;
+    temp2 = temp1 + bw;
+    temp3 = temp2 + bw;
+    temp4 = temp3 + bw;
+    x_i = temp4 + bw;
+    eval_args = x_i + bw;
+    cosres = eval_args + bw;
 
-  tableptr = tablespace;
+    tableptr = tablespace;
 
-  /* make fftw plan */
-  p = fftw_plan_r2r_1d(bw, temp4, cosres, FFTW_REDFT10, FFTW_ESTIMATE);
+    /* make fftw plan */
+    p = fftw_plan_r2r_1d(bw, temp4, cosres, FFTW_REDFT10, FFTW_ESTIMATE);
 
-  /* main loop */
+    /* main loop */
 
-  /* Set the initial number of evaluation points to appropriate
-     amount */
+    /* Set the initial number of evaluation points to appropriate
+       amount */
 
-  /* now get the evaluation nodes */
-  EvalPts(bw, x_i);
-  ArcCosEvalPts(bw, eval_args);
+    /* now get the evaluation nodes */
+    EvalPts(bw, x_i);
+    ArcCosEvalPts(bw, eval_args);
 
-  /* set initial values of first two Pmls */
-  for (i = 0; i < bw; i++)
-    prevprev[i] = 0.0;
-
-  if (m == 0)
+    /* set initial values of first two Pmls */
     for (i = 0; i < bw; i++)
-      prev[i] = 0.707106781186547; /* sqrt(1/2) */
-  else
-    Pmm_L2(m, eval_args, bw, prev);
+        prevprev[i] = 0.0;
 
-  if (m % 2) /* need to divide out sin x */
-    for (i = 0; i < bw; i++)
-      prev[i] /= sin(eval_args[i]);
+    if (m == 0)
+        for (i = 0; i < bw; i++)
+            prev[i] = 0.707106781186547; /* sqrt(1/2) */
+    else
+        Pmm_L2(m, eval_args, bw, prev);
 
-  /* set k to highest degree coefficient */
-  if ((m % 2) == 0)
-    k = m;
-  else
-    k = m - 1;
+    if (m % 2) /* need to divide out sin x */
+        for (i = 0; i < bw; i++)
+            prev[i] /= sin(eval_args[i]);
 
-  /* now compute cosine transform */
-  memcpy(temp4, prev, sizeof(double) * bw);
-  fftw_execute(p);
-  cosres[0] *= 0.707106781186547;
-  fudge = 1. / sqrt(((double)bw));
-  for (i = 0; i < bw; i++)
-    cosres[i] *= fudge;
+    /* set k to highest degree coefficient */
+    if ((m % 2) == 0)
+        k = m;
+    else
+        k = m - 1;
 
-  /* store what I've got so far */
-  for (i = 0; i <= k; i += 2)
-    tableptr[i / 2] = cosres[i];
-
-  /* update tableptr */
-  tableptr += k / 2 + 1;
-
-  /* now generate remaining pmls  */
-  for (i = 0; i < bw - m - 1; i++) {
-    vec_mul(L2_cn(m, m + i), prevprev, temp1, bw);
-    vec_pt_mul(prev, x_i, temp2, bw);
-    vec_mul(L2_an(m, m + i), temp2, temp3, bw);
-    vec_add(temp3, temp1, temp4, bw); /* temp4 now contains P(m,m+i+1) */
-
-    /* compute cosine transform */
+    /* now compute cosine transform */
+    memcpy(temp4, prev, sizeof(double) * bw);
     fftw_execute(p);
     cosres[0] *= 0.707106781186547;
-    for (j = 0; j < bw; j++)
-      cosres[j] *= fudge;
+    fudge = 1. / sqrt(((double)bw));
+    for (i = 0; i < bw; i++)
+        cosres[i] *= fudge;
 
-    /* update degree counter */
-    k++;
-
-    /* now put decimated result into table */
-    if (i % 2)
-      for (j = 0; j <= k; j += 2)
-        tableptr[j / 2] = cosres[j];
-    else
-      for (j = 1; j <= k; j += 2)
-        tableptr[j / 2] = cosres[j];
+    /* store what I've got so far */
+    for (i = 0; i <= k; i += 2)
+        tableptr[i / 2] = cosres[i];
 
     /* update tableptr */
     tableptr += k / 2 + 1;
 
-    /* now update Pi and P(i+1) */
-    memcpy(prevprev, prev, sizeof(double) * bw);
-    memcpy(prev, temp4, sizeof(double) * bw);
-  }
+    /* now generate remaining pmls  */
+    for (i = 0; i < bw - m - 1; i++) {
+        vec_mul(L2_cn(m, m + i), prevprev, temp1, bw);
+        vec_pt_mul(prev, x_i, temp2, bw);
+        vec_mul(L2_an(m, m + i), temp2, temp3, bw);
+        vec_add(temp3, temp1, temp4, bw); /* temp4 now contains P(m,m+i+1) */
 
-  fftw_destroy_plan(p);
+        /* compute cosine transform */
+        fftw_execute(p);
+        cosres[0] *= 0.707106781186547;
+        for (j = 0; j < bw; j++)
+            cosres[j] *= fudge;
+
+        /* update degree counter */
+        k++;
+
+        /* now put decimated result into table */
+        if (i % 2)
+            for (j = 0; j <= k; j += 2)
+                tableptr[j / 2] = cosres[j];
+        else
+            for (j = 1; j <= k; j += 2)
+                tableptr[j / 2] = cosres[j];
+
+        /* update tableptr */
+        tableptr += k / 2 + 1;
+
+        /* now update Pi and P(i+1) */
+        memcpy(prevprev, prev, sizeof(double) * bw);
+        memcpy(prev, temp4, sizeof(double) * bw);
+    }
+
+    fftw_destroy_plan(p);
 }
 
 /************************************************************************/
@@ -287,14 +288,14 @@ void CosPmlTableGen(int bw, int m, double *tablespace, double *workspace) {
 */
 
 int RowSize(int m, int l) {
-  if (l < m)
-    return 0;
-  else {
-    if ((m % 2) == 0)
-      return ((l / 2) + 1);
-    else
-      return (((l - 1) / 2) + 1);
-  }
+    if (l < m)
+        return 0;
+    else {
+        if ((m % 2) == 0)
+            return ((l / 2) + 1);
+        else
+            return (((l - 1) / 2) + 1);
+    }
 }
 /************************************************************************/
 /* Transposed row size returns the number of non-zero coefficients
@@ -309,65 +310,65 @@ int RowSize(int m, int l) {
 */
 
 int Transpose_RowSize(int row, int m, int bw) {
-  /* my version might be longer, but at least I understand
-     it better, and it's only minimally recursive */
+    /* my version might be longer, but at least I understand
+       it better, and it's only minimally recursive */
 
-  if (bw % 2) {
-    if (m % 2) {
-      if (m == 1)
-        return ((bw - row) / 2);
-      else if (row < m - 1)
-        return ((bw - m + 1) / 2);
-      else
-        return (Transpose_RowSize(row, 1, bw));
+    if (bw % 2) {
+        if (m % 2) {
+            if (m == 1)
+                return ((bw - row) / 2);
+            else if (row < m - 1)
+                return ((bw - m + 1) / 2);
+            else
+                return (Transpose_RowSize(row, 1, bw));
+        } else {
+            if (m == 0)
+                return ((bw - row) / 2 + ((row + 1) % 2));
+            else if (row < m)
+                return ((bw - m) / 2 + ((row + 1) % 2));
+            else
+                return (Transpose_RowSize(row, 0, bw));
+        }
     } else {
-      if (m == 0)
-        return ((bw - row) / 2 + ((row + 1) % 2));
-      else if (row < m)
-        return ((bw - m) / 2 + ((row + 1) % 2));
-      else
-        return (Transpose_RowSize(row, 0, bw));
+        if (m % 2) {
+            if (m == 1)
+                return ((bw - row) / 2);
+            else if (row < m - 1)
+                return ((bw - m + 1) / 2 - (row % 2));
+            else
+                return (Transpose_RowSize(row, 1, bw));
+        } else {
+            if (m == 0)
+                return ((bw - row) / 2 + (row % 2));
+            else if (row < m)
+                return ((bw - m) / 2);
+            else
+                return (Transpose_RowSize(row, 0, bw));
+        }
     }
-  } else {
-    if (m % 2) {
-      if (m == 1)
-        return ((bw - row) / 2);
-      else if (row < m - 1)
-        return ((bw - m + 1) / 2 - (row % 2));
-      else
-        return (Transpose_RowSize(row, 1, bw));
-    } else {
-      if (m == 0)
-        return ((bw - row) / 2 + (row % 2));
-      else if (row < m)
-        return ((bw - m) / 2);
-      else
-        return (Transpose_RowSize(row, 0, bw));
+
+    /*** original version
+
+    if (row >= bw)
+    return 0;
+    else if ((m % 2) == 0)
+    {
+    if (row <= m)
+    return ( ((bw-m)/2) );
+    else
+    return ( ((bw-row-1)/2) + 1);
     }
-  }
+    else
+    {
+    if (row == (bw-1))
+    return 0;
+    else if (row >= m)
+    return (Transpose_RowSize(row+1,m-1,bw));
+    else
+    return (Transpose_RowSize(row+1,m-1,bw) - (row % 2));
+    }
 
-  /*** original version
-
-  if (row >= bw)
-  return 0;
-  else if ((m % 2) == 0)
-  {
-  if (row <= m)
-  return ( ((bw-m)/2) );
-  else
-  return ( ((bw-row-1)/2) + 1);
-  }
-  else
-  {
-  if (row == (bw-1))
-  return 0;
-  else if (row >= m)
-  return (Transpose_RowSize(row+1,m-1,bw));
-  else
-  return (Transpose_RowSize(row+1,m-1,bw) - (row % 2));
-  }
-
-  ***/
+    ***/
 }
 
 /************************************************************************/
@@ -383,87 +384,86 @@ int Transpose_RowSize(int row, int m, int bw) {
 
 */
 
-void Transpose_CosPmlTableGen(int bw, int m, double *cos_pml_table,
-                              double *result) {
-  /* recall that cospml_table has had all the zeroes
-     stripped out, and that if m is odd, then it is
-     really a Gml function, which affects indexing a bit.
-  */
+void Transpose_CosPmlTableGen(int bw, int m, double* cos_pml_table, double* result) {
+    /* recall that cospml_table has had all the zeroes
+       stripped out, and that if m is odd, then it is
+       really a Gml function, which affects indexing a bit.
+    */
 
-  double *trans_tableptr, *tableptr;
-  int i, row, rowsize, stride, offset, costable_offset;
+    double *trans_tableptr, *tableptr;
+    int i, row, rowsize, stride, offset, costable_offset;
 
-  /* note that the number of non-zero entries is the same
-     as in the non-transposed case */
+    /* note that the number of non-zero entries is the same
+       as in the non-transposed case */
 
-  trans_tableptr = result;
+    trans_tableptr = result;
 
-  /* now traverse the cos_pml_table , loading appropriate values
-     into the rows of transposed array */
+    /* now traverse the cos_pml_table , loading appropriate values
+       into the rows of transposed array */
 
-  if (m == bw - 1)
-    memcpy(result, cos_pml_table, sizeof(double) * TableSize(m, bw));
-  else {
+    if (m == bw - 1)
+        memcpy(result, cos_pml_table, sizeof(double) * TableSize(m, bw));
+    else {
 
-    for (row = 0; row < bw; row++) {
-      /* if m odd, no need to do last row - all zeroes */
-      if (row == (bw - 1)) {
-        if (m % 2)
-          return;
-      }
+        for (row = 0; row < bw; row++) {
+            /* if m odd, no need to do last row - all zeroes */
+            if (row == (bw - 1)) {
+                if (m % 2)
+                    return;
+            }
 
-      /* get the rowsize for the transposed array */
-      rowsize = Transpose_RowSize(row, m, bw);
+            /* get the rowsize for the transposed array */
+            rowsize = Transpose_RowSize(row, m, bw);
 
-      /* compute the starting point for values in cos_pml_table */
-      if (row <= m) {
-        if ((row % 2) == 0)
-          tableptr = cos_pml_table + (row / 2);
-        else
-          tableptr = cos_pml_table + (m / 2) + 1 + (row / 2);
-      } else {
-        /* if row > m, then the highest degree coefficient
-       of P(m,row) should be the first coefficient loaded
-       into the transposed array, so figure out where
-       this point is.
-        */
-        offset = 0;
-        if ((m % 2) == 0) {
-          for (i = m; i <= row; i++)
-            offset += RowSize(m, i);
-        } else {
-          for (i = m; i <= row + 1; i++)
-            offset += RowSize(m, i);
-        }
-        /* now we are pointing one element too far, so decrement */
-        offset--;
+            /* compute the starting point for values in cos_pml_table */
+            if (row <= m) {
+                if ((row % 2) == 0)
+                    tableptr = cos_pml_table + (row / 2);
+                else
+                    tableptr = cos_pml_table + (m / 2) + 1 + (row / 2);
+            } else {
+                /* if row > m, then the highest degree coefficient
+               of P(m,row) should be the first coefficient loaded
+               into the transposed array, so figure out where
+               this point is.
+                */
+                offset = 0;
+                if ((m % 2) == 0) {
+                    for (i = m; i <= row; i++)
+                        offset += RowSize(m, i);
+                } else {
+                    for (i = m; i <= row + 1; i++)
+                        offset += RowSize(m, i);
+                }
+                /* now we are pointing one element too far, so decrement */
+                offset--;
 
-        tableptr = cos_pml_table + offset;
-      }
+                tableptr = cos_pml_table + offset;
+            }
 
-      /* stride is how far we need to jump between
-         values in cos_pml_table, i.e., to traverse the columns of the
-         cos_pml_table.  Need to set initial value.  Stride always
-         increases by 2 after that
-      */
-      if (row <= m)
-        stride = m + 2 - (m % 2) + (row % 2);
-      else
-        stride = row + 2;
+            /* stride is how far we need to jump between
+               values in cos_pml_table, i.e., to traverse the columns of the
+               cos_pml_table.  Need to set initial value.  Stride always
+               increases by 2 after that
+            */
+            if (row <= m)
+                stride = m + 2 - (m % 2) + (row % 2);
+            else
+                stride = row + 2;
 
-      /* now load up this row of the transposed table */
-      costable_offset = 0;
-      for (i = 0; i < rowsize; i++) {
-        trans_tableptr[i] = tableptr[costable_offset];
-        costable_offset += stride;
-        stride += 2;
+            /* now load up this row of the transposed table */
+            costable_offset = 0;
+            for (i = 0; i < rowsize; i++) {
+                trans_tableptr[i] = tableptr[costable_offset];
+                costable_offset += stride;
+                stride += 2;
 
-      } /* closes i loop */
+            } /* closes i loop */
 
-      trans_tableptr += rowsize;
+            trans_tableptr += rowsize;
 
-    } /* closes row loop */
-  }
+        } /* closes row loop */
+    }
 }
 /************************************************************************/
 /* This is a function that returns all of the (cosine transforms of)
@@ -487,32 +487,31 @@ void Transpose_CosPmlTableGen(int bw, int m, double *cos_pml_table,
 
 */
 
-double **Spharmonic_Pml_Table(int bw, double *resultspace, double *workspace) {
+double** Spharmonic_Pml_Table(int bw, double* resultspace, double* workspace) {
 
-  int i;
-  double **spharmonic_pml_table;
+    int i;
+    double** spharmonic_pml_table;
 
-  /* allocate an array of double pointers */
-  spharmonic_pml_table = (double **)malloc(sizeof(double *) * bw);
+    /* allocate an array of double pointers */
+    spharmonic_pml_table = (double**)malloc(sizeof(double*) * bw);
 
-  /* traverse the array, assigning a location in the resultspace
-     to each pointer */
+    /* traverse the array, assigning a location in the resultspace
+       to each pointer */
 
-  spharmonic_pml_table[0] = resultspace;
+    spharmonic_pml_table[0] = resultspace;
 
-  for (i = 1; i < bw; i++) {
-    spharmonic_pml_table[i] =
-        spharmonic_pml_table[i - 1] + TableSize(i - 1, bw);
-  }
+    for (i = 1; i < bw; i++) {
+        spharmonic_pml_table[i] = spharmonic_pml_table[i - 1] + TableSize(i - 1, bw);
+    }
 
-  /* now load up the array with CosPml and CosGml values */
-  for (i = 0; i < bw; i++) {
-    CosPmlTableGen(bw, i, spharmonic_pml_table[i], workspace);
-  }
+    /* now load up the array with CosPml and CosGml values */
+    for (i = 0; i < bw; i++) {
+        CosPmlTableGen(bw, i, spharmonic_pml_table[i], workspace);
+    }
 
-  /* that's it */
+    /* that's it */
 
-  return spharmonic_pml_table;
+    return spharmonic_pml_table;
 }
 
 /************************************************************************/
@@ -533,32 +532,28 @@ double **Spharmonic_Pml_Table(int bw, double *resultspace, double *workspace) {
 
 */
 
-double **Transpose_Spharmonic_Pml_Table(double **spharmonic_pml_table, int bw,
-                                        double *resultspace,
-                                        double *workspace) {
+double** Transpose_Spharmonic_Pml_Table(double** spharmonic_pml_table, int bw, double* resultspace, double* workspace) {
 
-  int i;
-  double **transpose_spharmonic_pml_table;
+    int i;
+    double** transpose_spharmonic_pml_table;
 
-  /* allocate an array of double pointers */
-  transpose_spharmonic_pml_table = (double **)malloc(sizeof(double *) * bw);
+    /* allocate an array of double pointers */
+    transpose_spharmonic_pml_table = (double**)malloc(sizeof(double*) * bw);
 
-  /* now need to load up the transpose_spharmonic_pml_table by transposing
-     the tables in the spharmonic_pml_table */
+    /* now need to load up the transpose_spharmonic_pml_table by transposing
+       the tables in the spharmonic_pml_table */
 
-  transpose_spharmonic_pml_table[0] = resultspace;
+    transpose_spharmonic_pml_table[0] = resultspace;
 
-  for (i = 0; i < bw; i++) {
-    Transpose_CosPmlTableGen(bw, i, spharmonic_pml_table[i],
-                             transpose_spharmonic_pml_table[i]);
+    for (i = 0; i < bw; i++) {
+        Transpose_CosPmlTableGen(bw, i, spharmonic_pml_table[i], transpose_spharmonic_pml_table[i]);
 
-    if (i != (bw - 1)) {
-      transpose_spharmonic_pml_table[i + 1] =
-          transpose_spharmonic_pml_table[i] + TableSize(i, bw);
+        if (i != (bw - 1)) {
+            transpose_spharmonic_pml_table[i + 1] = transpose_spharmonic_pml_table[i] + TableSize(i, bw);
+        }
     }
-  }
 
-  return transpose_spharmonic_pml_table;
+    return transpose_spharmonic_pml_table;
 }
 
 /************************************************************************/
@@ -570,14 +565,14 @@ double **Transpose_Spharmonic_Pml_Table(double **spharmonic_pml_table, int bw,
 
 int Reduced_Naive_TableSize(int bw, int m) {
 
-  int i, sum;
+    int i, sum;
 
-  sum = 0;
+    sum = 0;
 
-  for (i = m; i < bw; i++)
-    sum += (2 * bw * (bw - i));
+    for (i = m; i < bw; i++)
+        sum += (2 * bw * (bw - i));
 
-  return sum;
+    return sum;
 }
 
 /*************************************************************
@@ -596,49 +591,45 @@ int Reduced_Naive_TableSize(int bw, int m) {
 
 ***********************************************************/
 
-double **SemiNaive_Naive_Pml_Table(int bw, int m, double *resultspace,
-                                   double *workspace) {
-  int i;
-  double **seminaive_naive_table;
-  int lastspace;
+double** SemiNaive_Naive_Pml_Table(int bw, int m, double* resultspace, double* workspace) {
+    int i;
+    double** seminaive_naive_table;
+    int lastspace;
 
-  seminaive_naive_table = (double **)malloc(sizeof(double) * (bw + 1));
+    seminaive_naive_table = (double**)malloc(sizeof(double) * (bw + 1));
 
-  seminaive_naive_table[0] = resultspace;
+    seminaive_naive_table[0] = resultspace;
 
-  for (i = 1; i < m; i++) {
-    seminaive_naive_table[i] =
-        seminaive_naive_table[i - 1] + TableSize(i - 1, bw);
-  }
-
-  if (m == 0) {
-    lastspace = 0;
-    for (i = m + 1; i < bw; i++) {
-      seminaive_naive_table[i] =
-          seminaive_naive_table[i - 1] + (2 * bw * (bw - (i - 1)));
+    for (i = 1; i < m; i++) {
+        seminaive_naive_table[i] = seminaive_naive_table[i - 1] + TableSize(i - 1, bw);
     }
-  } else {
-    lastspace = TableSize(m - 1, bw);
-    seminaive_naive_table[m] = seminaive_naive_table[m - 1] + lastspace;
-    for (i = m + 1; i < bw; i++) {
-      seminaive_naive_table[i] =
-          seminaive_naive_table[i - 1] + (2 * bw * (bw - (i - 1)));
+
+    if (m == 0) {
+        lastspace = 0;
+        for (i = m + 1; i < bw; i++) {
+            seminaive_naive_table[i] = seminaive_naive_table[i - 1] + (2 * bw * (bw - (i - 1)));
+        }
+    } else {
+        lastspace = TableSize(m - 1, bw);
+        seminaive_naive_table[m] = seminaive_naive_table[m - 1] + lastspace;
+        for (i = m + 1; i < bw; i++) {
+            seminaive_naive_table[i] = seminaive_naive_table[i - 1] + (2 * bw * (bw - (i - 1)));
+        }
     }
-  }
 
-  /* now load up the array with CosPml and CosGml values */
-  for (i = 0; i < m; i++) {
-    CosPmlTableGen(bw, i, seminaive_naive_table[i], workspace);
-  }
+    /* now load up the array with CosPml and CosGml values */
+    for (i = 0; i < m; i++) {
+        CosPmlTableGen(bw, i, seminaive_naive_table[i], workspace);
+    }
 
-  /* now load up pml values */
-  for (i = m; i < bw; i++) {
-    PmlTableGen(bw, i, seminaive_naive_table[i], workspace);
-  }
+    /* now load up pml values */
+    for (i = m; i < bw; i++) {
+        PmlTableGen(bw, i, seminaive_naive_table[i], workspace);
+    }
 
-  /* that's it */
+    /* that's it */
 
-  return seminaive_naive_table;
+    return seminaive_naive_table;
 }
 
 /************************************************************************/
@@ -659,58 +650,50 @@ double **SemiNaive_Naive_Pml_Table(int bw, int m, double *resultspace,
 
 */
 
-double **Transpose_SemiNaive_Naive_Pml_Table(double **seminaive_naive_pml_table,
-                                             int bw, int m, double *resultspace,
-                                             double *workspace) {
+double** Transpose_SemiNaive_Naive_Pml_Table(double** seminaive_naive_pml_table, int bw, int m, double* resultspace,
+                                             double* workspace) {
 
-  int i, lastspace;
-  double **trans_seminaive_naive_pml_table;
+    int i, lastspace;
+    double** trans_seminaive_naive_pml_table;
 
-  /* allocate an array of double pointers */
-  trans_seminaive_naive_pml_table =
-      (double **)malloc(sizeof(double *) * (bw + 1));
+    /* allocate an array of double pointers */
+    trans_seminaive_naive_pml_table = (double**)malloc(sizeof(double*) * (bw + 1));
 
-  /* now need to load up the transpose_seminaive_naive_pml_table by transposing
-     the tables in the seminiave portion of seminaive_naive_pml_table */
+    /* now need to load up the transpose_seminaive_naive_pml_table by transposing
+       the tables in the seminiave portion of seminaive_naive_pml_table */
 
-  trans_seminaive_naive_pml_table[0] = resultspace;
+    trans_seminaive_naive_pml_table[0] = resultspace;
 
-  for (i = 1; i < m; i++) {
-    trans_seminaive_naive_pml_table[i] =
-        trans_seminaive_naive_pml_table[i - 1] + TableSize(i - 1, bw);
-  }
-
-  if (m == 0) {
-    lastspace = 0;
-    for (i = m + 1; i < bw; i++) {
-      trans_seminaive_naive_pml_table[i] =
-          trans_seminaive_naive_pml_table[i - 1] + (2 * bw * (bw - (i - 1)));
+    for (i = 1; i < m; i++) {
+        trans_seminaive_naive_pml_table[i] = trans_seminaive_naive_pml_table[i - 1] + TableSize(i - 1, bw);
     }
-  } else {
-    lastspace = TableSize(m - 1, bw);
-    trans_seminaive_naive_pml_table[m] =
-        trans_seminaive_naive_pml_table[m - 1] + lastspace;
 
-    for (i = m + 1; i < bw; i++) {
-      trans_seminaive_naive_pml_table[i] =
-          trans_seminaive_naive_pml_table[i - 1] + (2 * bw * (bw - (i - 1)));
+    if (m == 0) {
+        lastspace = 0;
+        for (i = m + 1; i < bw; i++) {
+            trans_seminaive_naive_pml_table[i] = trans_seminaive_naive_pml_table[i - 1] + (2 * bw * (bw - (i - 1)));
+        }
+    } else {
+        lastspace = TableSize(m - 1, bw);
+        trans_seminaive_naive_pml_table[m] = trans_seminaive_naive_pml_table[m - 1] + lastspace;
+
+        for (i = m + 1; i < bw; i++) {
+            trans_seminaive_naive_pml_table[i] = trans_seminaive_naive_pml_table[i - 1] + (2 * bw * (bw - (i - 1)));
+        }
     }
-  }
 
-  for (i = 0; i < m; i++) {
-    Transpose_CosPmlTableGen(bw, i, seminaive_naive_pml_table[i],
-                             trans_seminaive_naive_pml_table[i]);
+    for (i = 0; i < m; i++) {
+        Transpose_CosPmlTableGen(bw, i, seminaive_naive_pml_table[i], trans_seminaive_naive_pml_table[i]);
 
-    if (i != (bw - 1)) {
-      trans_seminaive_naive_pml_table[i + 1] =
-          trans_seminaive_naive_pml_table[i] + TableSize(i, bw);
+        if (i != (bw - 1)) {
+            trans_seminaive_naive_pml_table[i + 1] = trans_seminaive_naive_pml_table[i] + TableSize(i, bw);
+        }
     }
-  }
 
-  /* now load up pml values */
-  for (i = m; i < bw; i++) {
-    PmlTableGen(bw, i, trans_seminaive_naive_pml_table[i], workspace);
-  }
+    /* now load up pml values */
+    for (i = m; i < bw; i++) {
+        PmlTableGen(bw, i, trans_seminaive_naive_pml_table[i], workspace);
+    }
 
-  return trans_seminaive_naive_pml_table;
+    return trans_seminaive_naive_pml_table;
 }

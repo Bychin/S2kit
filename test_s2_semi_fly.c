@@ -1,18 +1,19 @@
 /*
-    Source code to test full spherical harmonic transform
-    using the seminaive and naive algorithms coded up during October, 1995.
+    Source code to test full spherical harmonic transform using the seminaive and naive algorithms
+    coded up during October, 1995.
 
-    In its current state, assuming that will seminaive at ALL orders.
-    If you wish to change this, modify the cutoff variable in this file, i.e.
-    cutoff = at what order to switch from semi-naive to naive algorithm
+    In its current state, assuming that will seminaive at *all* orders.
+    If you wish to change this, modify the `cutoff` variable in this file, i.e.
+    `cutoff =` at what order to switch from semi-naive to naive algorithm
 
-    Idea is to record the execution time for the spectral->grid->spectral
-    roundtrip, after precomputations have been done.
+    NOTE: Code will compute associated Legendre functions on the fly. This will be part of what's being timed.
 
-    The strategy is to generate random coefficients representing
-    a complete spherical harmonic series of funcions Y(m,l).
-    The ordering of the these coefficients is assumed to be the
-    same as that of the output of the FST_seminaive() routine, namely
+    Idea is to record the execution time for the spectral -> grid -> spectral roundtrip,
+    after precomputations have been done.
+
+    The strategy is to generate random coefficients representing a complete spherical harmonic series
+    of funcions Y(m,l). The ordering of the these coefficients is assumed to be the same as that of the
+    output of the FST_seminaive() routine, namely:
 
     f(0,0) f(0,1) f(0,2)       ...       f(0,bw-1)
            f(1,1) f(1,2)       ...       f(1,bw-1)
@@ -22,30 +23,24 @@
                                          f(-(bw-1),bw-1)
                          f(-(bw-2),bw-2) f(-(bw-2),bw-1)
     etc.
-                   f(-2,2)     ...       f(-2,bw-1)
-           f(-1,1) f(-1,2)     ...       f(-1,bw-1)
+                  f(-2,2)      ...       f(-2,bw-1)
+          f(-1,1) f(-1,2)      ...       f(-1,bw-1)
 
     This means that there are (bw*bw) coefficients.
 
-    Once the coefficients are generated, the corresponding
-    function is synthesized using InvFST_semi_fly(), then
-    transformed (analyzed) using FST_semi_fly(). Timing data
-    is printed.
+    Once the coefficients are generated, the corresponding function is synthesized using InvFST_semi_fly(),
+    then transformed (analyzed) using FST_semi_fly(). Timing data is printed.
 
-    Sample call
+    Sample call:
 
-        % test_s2_semi_fly bw loops [error_file]
+    test_s2_semi_fly bw loops [error_file]
 
     Appropriate timimg data will be printed out.
 
-    NOTE: In this program, the coefficients generated are such that the grid points
-    (sample values) produced are REAL. The routines InvFST_semi_fly() and
-    FST_semi_fly() will take advantage of this. If you wish to change this,
+    NOTE: In this program, the coefficients generated are such that the grid points (sample values) produced are *real*.
+    The routines InvFST_semi_fly() and FST_semi_fly() will take advantage of this. If you wish to change this,
     change the 7th argument of each function further down from "1" to "0".
     This is also documented in the file FST_semi_fly.c
-
-    NOTE: will compute associated Legendre functions on the fly. This will
-    be part of what's being timed.
 */
 
 #include <math.h>

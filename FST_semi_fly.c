@@ -1,61 +1,45 @@
-/*****************************************************************
+/*
+    FST_semi_fly.c - routines to perform convolutions on the 2-sphere using a combination of
+    semi-naive and naive algorithms.
 
+    Just like FST_semi_memo.c, except that these routines compute associated Legendre func om the fly.
 
-  FST_semi_fly.c - routines to perform convolutions on the
-  2-sphere using a combination of semi-naive and naive algorithms.
+    The primary functions in this package are:
+    1) FST_semi_fly()         - computes the spherical harmonic expansion;
+    2) InvFST_semi_fly()      - computes the inverse spherical harmonic transform;
+    3) FZT_semi_fly()         - computes the zonal harmonic transform;
+    4) TransMult()            - multiplies harmonic coefficients using Driscoll-Healy result, dual of convolution
+                                in "time" domain;
+    5) Conv2Sphere_semi_fly() - convolves two functins defined on the 2-sphere, using seminaive transform.
 
-  Just like FST_semi_memo.c EXCEPT THAT THESE ROUTINES
-  COMPUTE ASSOCIATED LEGENDRE FUNCTIONS ON THE FLY
+    Utility functions in this package:
+    1) seanindex(m,l,bandwidth) - gives the position of the coefficient f-hat(m,l) in the one-row array.
 
-  The primary functions in this package are
-
-  1) FST_semi_fly() - computes the spherical harmonic expansion.
-  2) InvFST_semi_fly() - computes the inverse spherical harmonic transform.
-  3) FZT_semi_fly() - computes the zonal harmonic transform.
-  4) TransMult() - Multiplies harmonic coefficients using Driscoll-Healy
-                    result.  Dual of convolution in "time" domain.
-  5) Conv2Sphere_semi_fly() - Convolves two functins defined on the 2-sphere,
-                          using seminaive transform
-
-  and one utility function:
-
-  1) seanindex(): Given bandwidth bw, seanindex(m,l,bw) will give the
-     position of the coefficient f-hat(m,l) in the one-row array
-
-  For descriptions on calling these functions, see the documentation
-  preceding each function.
-
-
+    For descriptions on calling these functions, see the documentation preceding each function.
 */
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <fftw3.h>
+
 #include "FST_semi_fly.h"
 #include "cospmls.h"
-#include "fftw3.h"
 #include "makeweights.h"
 #include "naive_synthesis.h"
 #include "pmls.h"
 #include "primitive.h"
 #include "seminaive.h"
 
-/************************************************************************/
+/*
+    Given bandwidth bw, seanindex(m,l,bw) will give the position of the
+    coefficient f-hat(m,l) in the one-row array that Sean stores the spherical
+    coefficients. This is needed to help preserve the symmetry that the
+    coefficients have: (l = degree, m = order, and abs(m) <= l)
 
-/*****************************************************************
-
-  Given bandwidth bw, seanindex(m,l,bw) will give the position of the
-  coefficient f-hat(m,l) in the one-row array that Sean stores the spherical
-  coefficients. This is needed to help preserve the symmetry that the
-  coefficients have: (l = degree, m = order, and abs(m) <= l)
-
-  f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
-
-  Thanks for your help Mark!
-
-  ******************************************************************/
-
+    f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
+*/
 int seanindex(int m, int l, int bw) {
     int bigL;
 
@@ -500,8 +484,6 @@ void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* id
    workspace needed is (12 * bw)
 
    dataformat =0 -> samples are complex, =1 -> samples real
-
-
 */
 
 void FZT_semi_fly(double* rdata, double* idata, double* rres, double* ires, int bw, double* workspace, int dataformat,
