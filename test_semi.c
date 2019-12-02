@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     double* sin_values = (double*)malloc(sizeof(double) * n);
 
     // generate sin values (need if order of transform is odd)
-    ArcCosEvalPts(n, eval_args);
+    AcosOfChebyshevNodes(n, eval_args);
     for (int i = 0; i < n; ++i)
         sin_values[i] = sin(eval_args[i]);
 

@@ -317,7 +317,7 @@ void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* id
 
     /* load up the sin_values array */
     n = 2 * bw;
-    ArcCosEvalPts(n, eval_pts);
+    AcosOfChebyshevNodes(n, eval_pts);
     for (i = 0; i < n; i++)
         sin_values[i] = sin(eval_pts[i]);
 
@@ -582,7 +582,7 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
         irptr += m - bw;
     }
 }
-/************************************************************************/
+
 /* Here's the big banana
    Convolves two functions defined on the 2-sphere.
    Uses seminaive algorithms for spherical harmonic transforms
@@ -613,7 +613,6 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
    ASSUMPTIONS:
    1. data is strictly REAL
    2. will do semi-naive algorithm for ALL orders
-
 */
 
 void Conv2Sphere_semi_fly(double* rdata, double* idata, double* rfilter, double* ifilter, double* rres, double* ires,

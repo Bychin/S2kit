@@ -10,7 +10,7 @@
 #include "primitive.h"
 
 /*
-    Generates all of the Pmls for a specified value of m.
+    Generates all of the Pmls for a specified value of `m`.
 
     bw        - bandwidth;
     m         - order;
@@ -46,15 +46,15 @@ void PmlTableGen(int bw, int m, double* storeplm, double* workspace) {
     eval_args = x_i + (2 * bw);
 
     /* get the evaluation nodes */
-    EvalPts(2 * bw, x_i);
-    ArcCosEvalPts(2 * bw, eval_args);
+    ChebyshevNodes(2 * bw, x_i);
+    AcosOfChebyshevNodes(2 * bw, eval_args);
 
     /* set initial values of first two Pmls */
     for (i = 0; i < 2 * bw; i++)
         prevprev[i] = 0.0;
     if (m == 0)
         for (i = 0; i < 2 * bw; i++)
-            prev[i] = 0.707106781186547;
+            prev[i] = M_SQRT1_2;
     else
         Pmm_L2(m, eval_args, 2 * bw, prev);
 
@@ -62,7 +62,7 @@ void PmlTableGen(int bw, int m, double* storeplm, double* workspace) {
 
     for (i = 0; i < bw - m - 1; i++) {
         vec_mul(L2_cn(m, m + i), prevprev, temp1, 2 * bw);
-        vec_pt_mul(prev, x_i, temp2, 2 * bw);
+        vec_dot(prev, x_i, temp2, 2 * bw);
         vec_mul(L2_an(m, m + i), temp2, temp3, 2 * bw);
         vec_add(temp3, temp1, temp4, 2 * bw); /* temp4 now contains P(m,m+i+1) */
 

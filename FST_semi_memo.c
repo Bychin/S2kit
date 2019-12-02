@@ -341,7 +341,7 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
     /* load up the sin_values array */
     n = 2 * bw;
 
-    ArcCosEvalPts(n, eval_pts);
+    AcosOfChebyshevNodes(n, eval_pts);
     for (i = 0; i < n; i++)
         sin_values[i] = sin(eval_pts[i]);
 

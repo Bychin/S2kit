@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // memcpy declaration
+#include <string.h>
 
 #include <fftw3.h>
 
@@ -207,8 +207,8 @@ void CosPmlTableGen(int bw, int m, double* tablespace, double* workspace) {
        amount */
 
     /* now get the evaluation nodes */
-    EvalPts(bw, x_i);
-    ArcCosEvalPts(bw, eval_args);
+    ChebyshevNodes(bw, x_i);
+    AcosOfChebyshevNodes(bw, eval_args);
 
     /* set initial values of first two Pmls */
     for (i = 0; i < bw; i++)
@@ -216,7 +216,7 @@ void CosPmlTableGen(int bw, int m, double* tablespace, double* workspace) {
 
     if (m == 0)
         for (i = 0; i < bw; i++)
-            prev[i] = 0.707106781186547; /* sqrt(1/2) */
+            prev[i] = M_SQRT1_2; // sqrt(1/2)
     else
         Pmm_L2(m, eval_args, bw, prev);
 
@@ -233,7 +233,7 @@ void CosPmlTableGen(int bw, int m, double* tablespace, double* workspace) {
     /* now compute cosine transform */
     memcpy(temp4, prev, sizeof(double) * bw);
     fftw_execute(p);
-    cosres[0] *= 0.707106781186547;
+    cosres[0] *= M_SQRT1_2;
     fudge = 1. / sqrt(((double)bw));
     for (i = 0; i < bw; i++)
         cosres[i] *= fudge;
@@ -248,13 +248,13 @@ void CosPmlTableGen(int bw, int m, double* tablespace, double* workspace) {
     /* now generate remaining pmls  */
     for (i = 0; i < bw - m - 1; i++) {
         vec_mul(L2_cn(m, m + i), prevprev, temp1, bw);
-        vec_pt_mul(prev, x_i, temp2, bw);
+        vec_dot(prev, x_i, temp2, bw);
         vec_mul(L2_an(m, m + i), temp2, temp3, bw);
         vec_add(temp3, temp1, temp4, bw); /* temp4 now contains P(m,m+i+1) */
 
         /* compute cosine transform */
         fftw_execute(p);
-        cosres[0] *= 0.707106781186547;
+        cosres[0] *= M_SQRT1_2;
         for (j = 0; j < bw; j++)
             cosres[j] *= fudge;
 

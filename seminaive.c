@@ -246,7 +246,7 @@ void SemiNaiveReduced(double* data, int bw, int m, double* result, double* works
     fftw_execute_r2r(*fplan, weighted_data, cos_data);
 
     /* need to normalize */
-    cos_data[0] *= 0.707106781186547;
+    cos_data[0] *= M_SQRT1_2;
     fudge = 1. / sqrt(2. * ((double)n));
     for (j = 0; j < n; j++)
         cos_data[j] *= fudge;
