@@ -21,6 +21,7 @@
     workspace - array of size 2 * bw;
 */
 
+// TODO remove memset
 void Naive_AnalysisX(double* data, int bw, int m, double* weights, double* result, double* plmtable,
                      double* workspace) {
     int i, j;
@@ -110,6 +111,7 @@ void Naive_AnalysisX(double* data, int bw, int m, double* weights, double* resul
           equal to 1 !!!
 */
 
+// TODO remove memset
 void Naive_SynthesizeX(double* coeffs, int bw, int m, double* result, double* plmtable) {
     int i, j;
     double tmpcoef;

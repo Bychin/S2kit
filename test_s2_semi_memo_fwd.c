@@ -46,7 +46,6 @@
           phi_j = 2*pi*k/(2*bw)
 */
 
-#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,132 +59,92 @@
 #include "csecond.h"
 #include "makeweights.h"
 
-/**************************************************/
-/**************************************************/
-
 int main(int argc, char** argv) {
-    FILE* fp;
-    int i, bw, size;
-    int l, m, dummy;
-    int cutoff, order;
-    int rank, howmany_rank;
-    double *rdata, *idata;
-    double *rcoeffs, *icoeffs;
-    double* weights;
-    double *seminaive_naive_tablespace, *workspace;
-    double** seminaive_naive_table;
-    double tstart, tstop;
-    fftw_plan dctPlan, fftPlan;
-    fftw_iodim dims[1], howmany_dims[1];
-
     if (argc < 4) {
-        fprintf(stdout, "Usage: test_s2_semi_memo_for sampleFile outputFile bw "
+        fprintf(stdout, "Usage: test_s2_semi_memo_fwd sampleFile outputFile bw "
                         "[output_format]\n");
         exit(0);
     }
 
-    bw = atoi(argv[3]);
+    int bw = atoi(argv[3]);
 
-    /*** ASSUMING WILL SEMINAIVE ALL ORDERS ***/
-    cutoff = bw;
-    size = 2 * bw;
+    int size = 2 * bw;
+    int cutoff = bw; // seminaive all orders
 
-    /* allocate memory */
-    rdata = (double*)malloc(sizeof(double) * (size * size));
-    idata = (double*)malloc(sizeof(double) * (size * size));
-    rcoeffs = (double*)malloc(sizeof(double) * (bw * bw));
-    icoeffs = (double*)malloc(sizeof(double) * (bw * bw));
-    weights = (double*)malloc(sizeof(double) * 4 * bw);
-    seminaive_naive_tablespace = (double*)malloc(
+    double* workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (7 * bw)));
+    double* seminaive_naive_tablespace = (double*)malloc(
         sizeof(double) * (Reduced_Naive_TableSize(bw, cutoff) + Reduced_SpharmonicTableSize(bw, cutoff)));
-    workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (7 * bw)));
 
-    /****
-         At this point, check to see if all the memory has been
-         allocated. If it has not, there's no point in going further.
-    ****/
-
-    if ((rdata == NULL) || (idata == NULL) || (rcoeffs == NULL) || (icoeffs == NULL) ||
-        (seminaive_naive_tablespace == NULL) || (workspace == NULL)) {
-        perror("Error in allocating memory");
-        exit(1);
-    }
-
-    /* now precompute the Legendres */
+    // precompute the Legendres (that's what memo suffix for)
     fprintf(stdout, "Generating seminaive_naive tables...\n");
-    seminaive_naive_table = SemiNaive_Naive_Pml_Table(bw, cutoff, seminaive_naive_tablespace, workspace);
+    double** seminaive_naive_table = SemiNaive_Naive_Pml_Table(bw, cutoff, seminaive_naive_tablespace, workspace);
 
-    /* construct fftw plans */
+    double* weights = (double*)malloc(sizeof(double) * 4 * bw);
+    double* rdata = (double*)malloc(sizeof(double) * (size * size));
+    double* idata = (double*)malloc(sizeof(double) * (size * size));
 
-    /* make DCT plan -> note that I will be using the GURU
-       interface to execute these plans within the routines*/
+    // Make DCT plan. Note that I will be using the GURU interface to execute these plans within the routines
+    fftw_plan DCT_plan = fftw_plan_r2r_1d(2 * bw, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
 
-    /* forward DCT */
-    dctPlan = fftw_plan_r2r_1d(2 * bw, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
-
-    /*
-      fftw "preamble" ;
-      note that this plan places the output in a transposed array
-    */
-    rank = 1;
+    // fftw "preamble"
+    // Note that FFT plan places the output in a transposed array
+    int rank = 1;
+    fftw_iodim dims[rank];
     dims[0].n = 2 * bw;
     dims[0].is = 1;
     dims[0].os = 2 * bw;
-    howmany_rank = 1;
+
+    int howmany_rank = 1;
+    fftw_iodim howmany_dims[howmany_rank];
     howmany_dims[0].n = 2 * bw;
     howmany_dims[0].is = 2 * bw;
     howmany_dims[0].os = 1;
 
-    /* forward fft */
-    fftPlan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
-                                       workspace + (4 * bw * bw), FFTW_ESTIMATE);
+    fftw_plan FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
+                                                  workspace + (4 * bw * bw), FFTW_ESTIMATE);
 
-    /* now make the weights */
     makeweights(bw, weights);
 
-    /* now read in samples */
-    fp = fopen(argv[1], "r");
-    for (i = 0; i < size * size; i++) {
-        /* first the real part of the sample */
-        fscanf(fp, "%lf", rdata + i);
-        /* now the imaginary part */
-        fscanf(fp, "%lf", idata + i);
+    // read samples
+    FILE* fp = fopen(argv[1], "r");
+    for (int i = 0; i < size * size; ++i) {
+        fscanf(fp, "%lf", rdata + i); // the real part of the sample
+        fscanf(fp, "%lf", idata + i); // the imaginary part
     }
     fclose(fp);
 
-    /* now do the forward spherical transform */
-    tstart = csecond();
-    FST_semi_memo(rdata, idata, rcoeffs, icoeffs, bw, seminaive_naive_table, workspace, 0, cutoff, &dctPlan, &fftPlan,
+    double* rcoeffs = (double*)malloc(sizeof(double) * (bw * bw));
+    double* icoeffs = (double*)malloc(sizeof(double) * (bw * bw));
+
+    double time_start = csecond();
+    // forward spherical transform
+    FST_semi_memo(rdata, idata, rcoeffs, icoeffs, bw, seminaive_naive_table, workspace, 0, cutoff, &DCT_plan, &FFT_plan,
                   weights);
-    tstop = csecond();
 
-    fprintf(stdout, "forward time \t = %.4e\n", tstop - tstart);
-
+    fprintf(stdout, "forward time \t = %.4e\n", csecond() - time_start);
     fprintf(stdout, "about to write out coefficients\n");
 
-    /* now write out coefficients, but in what format ? */
+    // choose format for writing coefficients
+    int order = 0; // code format
     if (argc == 5)
-        order = atoi(argv[4]);
-    else
-        order = 0;
+        order = atoi(argv[4]); // human-readable format
 
     fp = fopen(argv[2], "w");
-    if (order == 0) /* code format */
-        for (i = 0; i < bw * bw; i++)
+    if (order == 0)
+        for (int i = 0; i < bw * bw; ++i)
             fprintf(fp, "%.15f\n%.15f\n", rcoeffs[i], icoeffs[i]);
-    else /* human format */
-        for (l = 0; l < bw; l++)
-            for (m = -l; m < l + 1; m++) {
-                dummy = seanindex(m, l, bw);
-                fprintf(fp, "l = %d\t m = %d\t %.15f + %.15f I\n", l, m, rcoeffs[dummy], icoeffs[dummy]);
+    else
+        for (int l = 0; l < bw; ++l)
+            for (int m = -l; m < l + 1; ++m) {
+                int index = seanindex(m, l, bw);
+                fprintf(fp, "l = %d\t m = %d\t %.15f + %.15f I\n", l, m, rcoeffs[index], icoeffs[index]);
             }
     fclose(fp);
 
     fprintf(stdout, "finished writing coefficients\n");
 
-    /* clean up */
-    fftw_destroy_plan(fftPlan);
-    fftw_destroy_plan(dctPlan);
+    fftw_destroy_plan(FFT_plan);
+    fftw_destroy_plan(DCT_plan);
 
     free(workspace);
     free(seminaive_naive_table);

@@ -316,6 +316,8 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
 /*      dataformat =0 -> samples are complex, =1 -> samples real */
 
+// TODO try to use double** -> double*
+// TODO check memset
 void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* idata, int bw,
                       double** transpose_seminaive_naive_table, double* workspace, int dataformat, int cutoff,
                       fftw_plan* idctPlan, fftw_plan* ifftPlan) {
@@ -502,6 +504,7 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
 */
 
+// TODO memset?
 void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, int bw, double* cos_pml_table,
                    double* workspace, int dataformat, fftw_plan* dctPlan, double* weights) {
     int i, j, size;
@@ -673,7 +676,7 @@ void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double
     fftw_plan idctPlan, ifftPlan;
 
     size = 2 * bw;
-    cutoff = bw;
+    cutoff = bw; // TODO move to args?
     legendreSize = Reduced_Naive_TableSize(bw, cutoff) + Reduced_SpharmonicTableSize(bw, cutoff);
 
     /* assign space */

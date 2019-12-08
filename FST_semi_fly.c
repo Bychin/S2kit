@@ -293,6 +293,7 @@ void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs
 
 /*      dataformat =0 -> samples are complex, =1 -> samples real */
 
+// TODO chack memset
 void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* idata, int bw, double* workspace,
                      int dataformat, int cutoff, fftw_plan* idctPlan, fftw_plan* ifftPlan) {
     int size, m, i, n;
@@ -486,6 +487,7 @@ void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* id
    dataformat =0 -> samples are complex, =1 -> samples real
 */
 
+// TODO memset?
 void FZT_semi_fly(double* rdata, double* idata, double* rres, double* ires, int bw, double* workspace, int dataformat,
                   fftw_plan* dctPlan, double* weights) {
 

@@ -54,8 +54,6 @@
 #include "csecond.h"
 #include "makeweights.h"
 
-#define max(A, B) ((A) > (B) ? (A) : (B))
-
 int main(int argc, char** argv) {
     if (argc < 3) {
         fprintf(stdout, "Usage: test_s2_semi_fly bw loops [error_file]\n");
@@ -82,18 +80,17 @@ int main(int argc, char** argv) {
 
     // fftw "preamble"
     // Note that FFT plan places the output in a transposed array
-    fftw_iodim dims[1];
+    int rank = 1;
+    fftw_iodim dims[rank];
     dims[0].n = 2 * bw;
     dims[0].is = 1;
     dims[0].os = 2 * bw;
 
-    fftw_iodim howmany_dims[1];
+    int howmany_rank = 1;
+    fftw_iodim howmany_dims[howmany_rank];
     howmany_dims[0].n = 2 * bw;
     howmany_dims[0].is = 2 * bw;
     howmany_dims[0].os = 1;
-
-    int rank = 1;
-    int howmany_rank = 1;
 
     fftw_plan FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
                                                   workspace + (4 * bw * bw), FFTW_ESTIMATE);
@@ -101,16 +98,15 @@ int main(int argc, char** argv) {
     // Note that FFT plans assumes that I'm working with a transposed array, e.g. the inputs for a length 2*bw transform
     // are placed every 2*bw apart, the output will be consecutive entries in the array
 
+    rank = 1;
     dims[0].n = 2 * bw;
     dims[0].is = 2 * bw;
     dims[0].os = 1;
 
+    howmany_rank = 1;
     howmany_dims[0].n = 2 * bw;
     howmany_dims[0].is = 1;
     howmany_dims[0].os = 2 * bw;
-
-    rank = 1;
-    howmany_rank = 1;
 
     fftw_plan inv_FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
                                                       workspace + (4 * bw * bw), FFTW_ESTIMATE);
@@ -126,7 +122,7 @@ int main(int argc, char** argv) {
     double* relerror = (double*)malloc(sizeof(double) * loops);
     double* curmax = (double*)malloc(sizeof(double) * loops);
 
-    int cutoff = bw; // assuming will seminaive all orders
+    int cutoff = bw; // seminaive all orders
 
     double fwd_time = 0.0;
     double inv_time = 0.0;
@@ -148,7 +144,7 @@ int main(int argc, char** argv) {
 
                 index = seanindex(-m, l, bw);
                 rcoeffs[index] = pow(-1.0, m) * x;
-                icoeffs[index] = pow(-1.0, (m + 1)) * y;
+                icoeffs[index] = pow(-1.0, m + 1) * y;
             }
 
         // have to zero out the m=0 coefficients, since those are real
@@ -180,8 +176,8 @@ int main(int argc, char** argv) {
             double itmp = iresult[j] - icoeffs[j];
             double origmag = sqrt((rcoeffs[j] * rcoeffs[j]) + (icoeffs[j] * icoeffs[j]));
             double tmpmag = sqrt((rtmp * rtmp) + (itmp * itmp));
-            relerror[i] = max(relerror[i], tmpmag / (origmag + pow(10.0, -50.0)));
-            curmax[i] = max(curmax[i], tmpmag);
+            relerror[i] = fmax(relerror[i], tmpmag / (origmag + pow(10.0, -50.0)));
+            curmax[i] = fmax(curmax[i], tmpmag);
         }
 
         fprintf(stdout, "r-o error\t = %.12f\n", curmax[i]);
@@ -209,14 +205,14 @@ int main(int argc, char** argv) {
     fprintf(stdout, "Program: test_s2_semi_fly\n");
     fprintf(stdout, "Bandwidth = %d\n", bw);
 
-    char* timing_object = "cpu";
+    const char* timing_object = "cpu";
 #ifdef WALLCLOCK
     timing_object = "wall";
 #endif
 
     double total_time = inv_time + fwd_time;
 
-    fprintf(stdout, "Total elapsed %s time:\t\t %.4e seconds.\n", timing_object, total_time);
+    fprintf(stdout, "Total elapsed %s time:\t\t\t %.4e seconds.\n", timing_object, total_time);
     fprintf(stdout, "Average %s time forward per iteration:\t %.4e seconds.\n", timing_object, fwd_time / loops);
     fprintf(stdout, "Average %s time inverse per iteration:\t %.4e seconds.\n", timing_object, inv_time / loops);
 

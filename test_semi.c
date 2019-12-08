@@ -23,8 +23,6 @@
 #include "primitive.h"
 #include "seminaive.h"
 
-#define mymax(a, b) ((a) > (b) ? (a) : (b))
-
 int main(int argc, char** argv) {
     if (argc < 4) {
         fprintf(stdout, "Usage: test_semi m bw loops\n");
@@ -102,8 +100,8 @@ int main(int argc, char** argv) {
         for (int j = 0; j < bw - m; ++j) {
             double tmp_error = fabs(coeffs[j] - new_coeffs[j]);
             double tmp_relerror = tmp_error / (fabs(coeffs[j]) + pow(10.0, -50.0));
-            curmax[k] = mymax(curmax[k], tmp_error);
-            relerror[k] = mymax(relerror[k], tmp_relerror);
+            curmax[k] = fmax(curmax[k], tmp_error);
+            relerror[k] = fmax(relerror[k], tmp_relerror);
         }
 
         sum_error += curmax[k];

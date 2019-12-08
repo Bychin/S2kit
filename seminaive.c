@@ -81,7 +81,7 @@
                      FFTW_REDFT01, FFTW_ESTIMATE );
 
 */
-
+// TODO remove memset?
 void InvSemiNaiveReduced(double* coeffs, int bw, int m, double* result, double* trans_cos_pml_table, double* sin_values,
                          double* workspace, fftw_plan* fplan) {
     double* trans_tableptr;
