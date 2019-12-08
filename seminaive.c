@@ -187,7 +187,7 @@ void InvSemiNaiveReduced(double* coeffs, int bw, int m, double* result, double* 
            for this problem.  This table can be computed
            using the CosPmlTableGen() function, and
            the offset for a particular Pml can be had
-           by calling the function NewTableOffset().
+           by calling the function TableOffset().
            The size of the table is computed using
            the TableSize() function.  Note that
            since the cosine series are always zero-striped,
@@ -262,7 +262,7 @@ void SemiNaiveReduced(double* data, int bw, int m, double* result, double* works
     toggle = 0 ;
     for (i=m; i<bw; i++)
     {
-    pml_ptr = cos_pml_table + NewTableOffset(m,i);
+    pml_ptr = cos_pml_table + TableOffset(m,i);
 
     if ((m % 2) == 0)
     {
@@ -291,7 +291,7 @@ void SemiNaiveReduced(double* data, int bw, int m, double* result, double* works
     /******** this is the new loop *********/
     toggle = 0;
     for (i = m; i < bw; i++) {
-        pml_ptr = cos_pml_table + NewTableOffset(m, i);
+        pml_ptr = cos_pml_table + TableOffset(m, i);
 
         result0 = 0.0;
         result1 = 0.0;

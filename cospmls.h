@@ -1,30 +1,31 @@
 #ifndef _COSPMLS_H
 #define _COSPMLS_H
 
-extern int TableSize(int, int);
+// TODO extern?
+extern int TableSize(const int, const int);
 
-extern int Spharmonic_TableSize(int);
+extern int Spharmonic_TableSize(const int);
 
-extern int Reduced_SpharmonicTableSize(int, int);
+extern int Reduced_SpharmonicTableSize(const int, const int);
 
-extern int Reduced_Naive_TableSize(int, int);
+extern int Reduced_Naive_TableSize(const int, const int);
 
-extern int NewTableOffset(int, int);
+extern int TableOffset(const int, const int);
 
-extern void CosPmlTableGen(int, int, double*, double*);
+extern void CosPmlTableGen(const int, const int, double*, double*);
 
-extern int RowSize(int, int);
+extern int RowSize(const int, const int);
 
-extern int Transpose_RowSize(int, int, int);
+extern int Transpose_RowSize(const int, const int, const int);
 
-extern void Transpose_CosPmlTableGen(int, int, double*, double*);
+extern void Transpose_CosPmlTableGen(const int, const int, double*, double*);
 
-extern double** Spharmonic_Pml_Table(int, double*, double*);
+extern double** Spharmonic_Pml_Table(const int, double*, double*);
 
-extern double** Transpose_Spharmonic_Pml_Table(double**, int, double*, double*);
+extern double** Transpose_Spharmonic_Pml_Table(double**, const int, double*);
 
-extern double** SemiNaive_Naive_Pml_Table(int, int, double*, double*);
+extern double** SemiNaive_Naive_Pml_Table(const int, const int, double*, double*);
 
-extern double** Transpose_SemiNaive_Naive_Pml_Table(double**, int, int, double*, double*);
+extern double** Transpose_SemiNaive_Naive_Pml_Table(double**, const int, const int, double*, double*);
 
-#endif
+#endif // _COSPMLS_H

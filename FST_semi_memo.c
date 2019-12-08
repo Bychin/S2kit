@@ -750,7 +750,7 @@ void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double
     spharmonic_pml_table = Spharmonic_Pml_Table(bw, spharmonic_result_space, scratchpad);
 
     transpose_spharmonic_pml_table =
-        Transpose_Spharmonic_Pml_Table(spharmonic_pml_table, bw, transpose_spharmonic_result_space, scratchpad);
+        Transpose_Spharmonic_Pml_Table(spharmonic_pml_table, bw, transpose_spharmonic_result_space);
     FST_semi_memo(rdata, idata, frres, fires, bw, spharmonic_pml_table, scratchpad, 1, bw, &dctPlan, &fftPlan, weights);
 
     FZT_semi_memo(rfilter, ifilter, filtrres, filtires, bw, spharmonic_pml_table[0], scratchpad, 1, &dctPlan, weights);

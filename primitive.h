@@ -22,4 +22,5 @@ void ChebyshevNodes(int, double*);
 void Pmm_L2(int, double*, int, double*);
 
 void P_eval(int, double*, double*, double*, double*, int);
-#endif /* _PRIMITIVE_H */
+
+#endif // _PRIMITIVE_H
