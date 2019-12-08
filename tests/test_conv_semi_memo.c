@@ -44,9 +44,8 @@
 #include <string.h>
 
 #include <fftw3.h>
-
-#include "FST_semi_memo.h"
-#include "cospmls.h"
+#include <FST_semi_memo.h>
+#include <cospmls.h>
 
 int main(int argc, char** argv) {
     if (argc < 5) {

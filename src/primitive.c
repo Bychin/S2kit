@@ -4,6 +4,8 @@
 
 // TODO move to utils?
 
+#include "primitive.h"
+
 #include <math.h>
 #include <string.h>
 

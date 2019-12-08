@@ -45,7 +45,6 @@
 #include <string.h>
 
 #include <fftw3.h>
-
 #include "FST_semi_fly.h"
 
 int main(int argc, char** argv) {

@@ -6,15 +6,16 @@ FFTWLIB = -L$(FFTWDIR)/lib -lfftw3
 
 # define WALLCLOCK on the CFLAGS line for walltime instead of cpu time (default)
 # -U__STRICT_ANSI__ - M_PI for GCC
-CFLAGS = -O3 ${FFTWINC} -std=c11 -m64 -fPIC -U__STRICT_ANSI__
+# TODO -fPIC?
+CFLAGS = -O3 ${FFTWINC} -std=c11 -m64 -U__STRICT_ANSI__
 
-LDFLAGS = -lm -m64 -fPIC
+LDFLAGS = -lm -m64
 
 # naive
 NAIVESRC = primitive.c pmls.c naive_synthesis.c \
 	makeweights.c csecond.c
 
-NAIVEOBJ = primitive.c pmls.o naive_synthesis.o \
+NAIVEOBJ = primitive.o pmls.o naive_synthesis.o \
 	makeweights.o csecond.o
 
 # semi-naive
@@ -33,22 +34,51 @@ CONVSEMISRC = $(FSTSEMISRC)
 
 CONVSEMIOBJ = $(FSTSEMIOBJ)
 
-ALLSRC = FST_semi_fly.c FST_semi_memo.c cospmls.c csecond.c \
-	makeweights.c naive_synthesis.c pmls.c primitive.c \
-	seminaive.c test_conv_semi_fly.c test_conv_semi_memo.c \
-	test_naive.c test_s2_semi_fly.c test_s2_semi_memo.c \
-	test_s2_semi_memo_fwd.c test_s2_semi_memo_inv.c \
-	test_semi.c
+SRC_DIR = src
+OBJ_DIR = bin
+TEST_DIR = tests
+
+LIB_NAME = s2kit
+
+SRC_LIB_FILES = $(wildcard $(SRC_DIR)/*.c)
+SRC_TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
+ALL_SRC_FILES = $(SRC_LIB_FILES) $(SRC_TEST_FILES)
 
 
 configure:
-	mkdir -p bin
+	mkdir -p $(OBJ_DIR)
+
+# TODO: not working
+lib:
+	make \
+	clean \
+	configure
+
+	$(CC) -c $(CFLAGS) ${FFTWLIB} $(LDFLAGS) $(SRC_LIB_FILES)
+	ar rcs $(OBJ_DIR)/$(LIB_NAME).a $(wildcard *.o)
+	rm *.o
+
+test:
+	make \
+	lib \
+	test_naive \
+	test_semi \
+	test_conv_semi_fly \
+	test_conv_semi_memo \
+	test_s2_semi_fly \
+	test_s2_semi_memo_fwd \
+	test_s2_semi_memo_inv \
+	test_s2_semi_memo 
 
 all:
 	make \
 	configure \
 	legendre \
 	sphere
+
+clean:
+	rm -vf *.o
+	rm -vrf ./bin
 
 legendre:
 	make \
@@ -67,11 +97,7 @@ sphere:
 	test_conv_semi_fly
 
 depend:
-	makedepend ${FFTWINC} ${ALLSRC}
-
-clean:
-	rm -vf *.o
-	rm -vrf ./bin
+	makedepend ${FFTWINC} ${ALL_SRC_FILES}
 
 
 # make definitions for the individual executables
