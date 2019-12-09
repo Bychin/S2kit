@@ -21,4 +21,4 @@ extern void TransMult(double*, double*, double*, double*, double*, double*, int)
 
 extern void Conv2Sphere_semi_memo(double*, double*, double*, double*, double*, double*, int, double*);
 
-#endif /* _FSTSEMI_MEMO_H */
+#endif // _FSTSEMI_MEMO_H

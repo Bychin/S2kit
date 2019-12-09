@@ -16,7 +16,7 @@
     m - order.
 */
 
-double L2_an(int m, int l) {
+double L2_an(const int m, const int l) {
     double m_d = (double)m;
     double l_d = (double)l;
 
@@ -28,7 +28,7 @@ double L2_an(int m, int l) {
 }
 
 // Note: if input `l` is zero, return 0
-double L2_cn(int m, int l) {
+double L2_cn(const int m, const int l) {
     if (l == 0) {
         return 0.;
     }
@@ -45,7 +45,7 @@ double L2_cn(int m, int l) {
 }
 
 // Note: when using the reverse recurrence, instead of `1/L2_cn(m,l)`
-double L2_cn_inv(int m, int l) {
+double L2_cn_inv(const int m, const int l) {
     double m_d = (double)m;
     double l_d = (double)l;
 
@@ -62,7 +62,7 @@ double L2_cn_inv(int m, int l) {
 
 // Note: when using the reverse recurrence, instead of `-L2_an(m,l)/L2_cn(m,l)`
 // TODO: remove?
-double L2_ancn(int m, int l) {
+double L2_ancn(const int m, const int l) {
     double m_d = (double)m;
     double l_d = (double)l;
 
@@ -81,7 +81,7 @@ double L2_ancn(int m, int l) {
 
     Note: `result` and `v{1,2}` must be vectors of length `len`
 */
-void vec_add(double* v1, double* v2, double* result, int len) {
+void vec_add(double* v1, double* v2, double* result, const int len) {
     for (int i = 0; i < len; ++i)
         result[i] = v1[i] + v2[i];
 }
@@ -91,7 +91,7 @@ void vec_add(double* v1, double* v2, double* result, int len) {
 
     Note: `result` and `v` must be vectors of length `len`
 */
-void vec_mul(double scalar, double* v, double* result, int len) {
+void vec_mul(const double scalar, double* v, double* result, const int len) {
     for (int i = 0; i < len; ++i)
         result[i] = scalar * v[i];
 }
@@ -101,7 +101,7 @@ void vec_mul(double scalar, double* v, double* result, int len) {
 
     Note: `result` and `v{1,2}` must be vectors of length `len`
 */
-void vec_dot(double* data1, double* data2, double* result, int len) {
+void vec_dot(double* data1, double* data2, double* result, const int len) {
     for (int i = 0; i < len; ++i)
         result[i] = data1[i] * data2[i];
 }
@@ -115,7 +115,7 @@ void vec_dot(double* data1, double* data2, double* result, int len) {
 
     Note: `eval_points` must be an array of length `n`
 */
-void AcosOfChebyshevNodes(int n, double* eval_points) {
+void AcosOfChebyshevNodes(const int n, double* eval_points) {
     double denominator = 2. * n;
 
     for (int i = 0; i < n; ++i)
@@ -128,7 +128,7 @@ void AcosOfChebyshevNodes(int n, double* eval_points) {
 
     Note: `eval_points` must be an array of length `n`
 */
-void ChebyshevNodes(int n, double* eval_points) {
+void ChebyshevNodes(const int n, double* eval_points) {
     double denominator = 2. * n;
 
     for (int i = 0; i < n; i++)
@@ -145,7 +145,7 @@ void ChebyshevNodes(int n, double* eval_points) {
     Note: input must be of order `m`, `eval_points` must be an array of length `n` of the angular
     arguments of evaluation points, `result` must be an array of length `n`
 */
-void Pmm_L2(int m, double* eval_points, int n, double* result) {
+void Pmm_L2(const int m, double* eval_points, const int n, double* result) {
     double m_d = (double)m;
     double norming_const = sqrt(m_d + 0.5);
 
@@ -172,7 +172,7 @@ void Pmm_L2(int m, double* eval_points, int n, double* result) {
 // TODO was this code somewhere else? duplicate?
 // TODO remove? this func is not used anywhere
 // TODO rename EvaluateP
-void P_eval(int m, double* coeffs, double* eval_points, double* result, double* workspace, int bw) {
+void P_eval(const int m, double* coeffs, double* eval_points, double* result, double* workspace, const int bw) {
     int n = 2 * bw;
 
     double* prevprev = workspace; // TODO rename

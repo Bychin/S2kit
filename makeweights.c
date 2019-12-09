@@ -19,29 +19,28 @@
 #include <math.h>
 
 /*
-    makeweights: given a bandwidth bw, make weights for both even *and* odd order Legendre transforms.
+    Makes weights for both even *and* odd order Legendre transforms for a given bandwidth bw.
 
     bw      - bandwidth of transform;
-    weights - pointer to double array of length 4*bw, this array will contain the even and odd weights,
-        even weights start at weight[0], and odd weights start at weights[2*bw]
+    weights - pointer to double array of length `4*bw`, this array will contain the even and odd weights,
+        even weights start at `weights[0]`, and odd weights start at `weights[2*bw]`
 */
-
 // TODO: move to utils?
+void makeweights(const int bw, double* weights) {
+    double fudge = M_PI / (4. * bw);
 
-void makeweights(int bw, double* weights) {
-    double fudge = M_PI / ((double)(4 * bw));
+    for (int i = 0; i < 2 * bw; ++i) {
+        double sum = 0.0;
+        double k = 2. * i + 1.;
 
-    for (int j = 0; j < 2 * bw; ++j) {
-        double tmpsum = 0.0;
+        for (int j = 0; j < bw; ++j)
+            sum += 1. / (2. * j + 1.) * sin(k * (2. * j + 1.) * fudge);
 
-        for (int k = 0; k < bw; ++k)
-            tmpsum += 1. / ((double)(2 * k + 1)) * sin((double)((2 * j + 1) * (2 * k + 1)) * fudge);
+        sum *= sin(k * fudge);
+        sum *= 2. / bw;
 
-        tmpsum *= sin((double)(2 * j + 1) * fudge);
-        tmpsum *= 2. / ((double)bw);
-
-        weights[j] = tmpsum;
-        weights[j + 2 * bw] = tmpsum * sin((double)(2 * j + 1) * fudge);
+        weights[i] = sum;
+        weights[i + 2 * bw] = sum * sin(k * fudge);
     }
 }
 

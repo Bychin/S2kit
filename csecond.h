@@ -3,4 +3,4 @@
 
 extern double csecond(void);
 
-#endif /* _CSECOND_H */
+#endif // _CSECOND_H

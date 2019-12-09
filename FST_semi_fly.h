@@ -19,4 +19,4 @@ extern void FZT_semi_fly(double*, double*, double*, double*, int, double*, int, 
 
 extern void Conv2Sphere_semi_fly(double*, double*, double*, double*, double*, double*, int, double*);
 
-#endif /* _FSTSEMI_FLY_H */
+#endif // _FSTSEMI_FLY_H
