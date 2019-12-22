@@ -5,6 +5,8 @@
     For a description, see the related paper or Sean's thesis.
 */
 
+#include "seminaive.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,17 +64,16 @@
            same plan to different arrays; the plan should be:
            `fftw_plan_r2r_1d(2*bw, fcos, result, FFTW_REDFT01, FFTW_ESTIMATE)`.
 */
-// TODO remove memset?
 void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* result, double* trans_cos_pml_table,
                          double* sin_values, double* workspace, fftw_plan* fplan) {
-    double* fcos = workspace;
+    int size = 2 * bw;
 
     // for paranoia, zero out arrays
-    memset(fcos, 0, sizeof(double) * 2 * bw);
-    memset(result, 0, sizeof(double) * 2 * bw);
+    memset(workspace, 0, sizeof(double) * size);
+    memset(result, 0, sizeof(double) * size);
 
+    double* fcos = workspace;
     double* trans_tableptr = trans_cos_pml_table;
-    double* p = trans_cos_pml_table;
 
     /* 
         main loop - compute each value of fcos
@@ -80,13 +81,10 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
         Note that all zeroes have been stripped out of the
         `trans_cos_pml_table`, so indexing is somewhat complicated.
     */
-
     for (int i = 0; i < bw; ++i) {
-        if (i == (bw - 1)) {
-            if (m % 2) {
-                fcos[bw - 1] = 0.0;
-                break;
-            }
+        if (i == (bw - 1) && m % 2) {
+            fcos[bw - 1] = 0.0;
+            break;
         }
 
         double* assoc_offset;
@@ -95,24 +93,12 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
         else
             assoc_offset = coeffs + (i % 2);
 
-        double fcos0 = 0.0;
-        double fcos1 = 0.0;
-        double fcos2 = 0.0;
-        double fcos3 = 0.0;
-
         int rowsize = Transpose_RowSize(i, m, bw);
-        int j = 0;
-        // TODO one item per cycle
-        for (; j < rowsize % 4; ++j)
-            fcos0 += assoc_offset[2 * j] * trans_tableptr[j];
 
-        for (; j < rowsize; j += 4) {
-            fcos0 += assoc_offset[2 * j] * trans_tableptr[j];
-            fcos1 += assoc_offset[2 * (j + 1)] * trans_tableptr[j + 1];
-            fcos2 += assoc_offset[2 * (j + 2)] * trans_tableptr[j + 2];
-            fcos3 += assoc_offset[2 * (j + 3)] * trans_tableptr[j + 3];
-        }
-        fcos[i] = fcos0 + fcos1 + fcos2 + fcos3;
+        double value = 0.;
+        for (int j = 0; j < rowsize; ++j)
+            value += assoc_offset[2 * j] * trans_tableptr[j];
+        fcos[i] = value;
 
         trans_tableptr += rowsize;
     }
@@ -123,22 +109,22 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
     */
 
     // scale coefficients prior to taking inverse DCT
-    double fudge = 0.5 / sqrt(bw);
-    for (int i = 1; i < 2 * bw; ++i)
-        fcos[i] *= fudge;
-    fcos[0] /= sqrt(2. * bw);
+    // TODO move part to upper for-cycle?
+    fcos[0] /= sqrt(size);
+    double coeff = 0.5 / sqrt(bw);
+    for (int i = 1; i < bw; ++i)
+        fcos[i] *= coeff;
 
     // take the inverse dct
     // Note that I am using the guru interface
     fftw_execute_r2r(*fplan, fcos, result);
 
-    // if m is odd, then need to multiply by sin(x) at Chebyshev nodes
-    if (m % 2) {
-        for (int i = 0; i < (2 * bw); ++i)
-            result[i] *= sin_values[i];
-    }
+    if (!(m % 2))
+        return;
 
-    trans_tableptr = p;
+    // if m is odd, then need to multiply by sin(x) at Chebyshev nodes
+    for (int i = 0; i < size; ++i)
+        result[i] *= sin_values[i];
 }
 
 /*
@@ -166,97 +152,45 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
 */
 void SemiNaiveReduced(double* data, const int bw, const int m, double* result, double* workspace,
                       double* cos_pml_table, double* weights, fftw_plan* fplan) {
-    int n = 2 * bw;
+    int size = 2 * bw;
 
     double* weighted_data = workspace;
-    double* cos_data = weighted_data + (2 * bw);
+    double* cos_data = weighted_data + size;
 
-    // for paranoia, zero out the result array
-    memset(result, 0, sizeof(double) * (bw - m));
-
-    // apply quadrature weights to the data and
-    // compute the cosine transform
+    // apply quadrature weights to the data and compute the cosine transform
     if (m % 2)
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < size; ++i)
             weighted_data[i] = data[i] * weights[2 * bw + i];
     else
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < size; ++i)
             weighted_data[i] = data[i] * weights[i];
 
-
     // smooth the weighted signal
-
     fftw_execute_r2r(*fplan, weighted_data, cos_data);
 
     // normalize
     cos_data[0] *= M_SQRT1_2;
-    double fudge = 1. / sqrt(2. * n);
-    for (int i = 0; i < n; ++i)
-        cos_data[i] *= fudge;
+    double coeff = 1. / sqrt(2. * size);
+    for (int i = 0; i < size; ++i)
+        cos_data[i] *= coeff;
 
     /*
         Do the projections.
         Note that the `cos_pml_table` has had all the zeroes
         stripped out so the indexing is complicated somewhat
     */
-
-    // TODO bring back the original one
-    /******** this is the original loop
-
-    int toggle = 0 ;
-    for (int i=m; i<bw; ++i)
-    {
-    double* pml_ptr = cos_pml_table + TableOffset(m,i);
-
-    if ((m % 2) == 0)
-    {
-    for (int j=0; j<(i/2)+1; ++j)
-    result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
-    }
-    else
-    {
-    if (((i-m) % 2) == 0)
-    {
-    for (int j=0; j<(i/2)+1; ++j)
-    result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
-    }
-    else
-    {
-    for (int j=0; j<(i/2); ++j)
-    result[i-m] += cos_data[(2*j)+toggle] * pml_ptr[j];
-    }
-    }
-
-    toggle = (toggle+1) % 2;
-    }
-
-    *****/
-
-    /******** this is the new loop *********/
     int toggle = 0;
     for (int i = m; i < bw; ++i) {
         double* pml_ptr = cos_pml_table + TableOffset(m, i);
 
-        double result0 = 0.0;
-        double result1 = 0.0;
-        double result2 = 0.0;
-        double result3 = 0.0;
+        double value = 0.;
+        for (int j = 0; j < (i / 2); ++j)
+            value += cos_data[(2 * j) + toggle] * pml_ptr[j];
 
-        int j = 0;
-        for (; j < ((i / 2) % 4); ++j)
-            result0 += cos_data[(2 * j) + toggle] * pml_ptr[j];
+        if (!((i - m) % 2) || !(m % 2))
+            value += cos_data[(2 * (i / 2)) + toggle] * pml_ptr[(i / 2)];
 
-        for (; j < (i / 2); j += 4) {
-            result0 += cos_data[(2 * j) + toggle] * pml_ptr[j];
-            result1 += cos_data[(2 * (j + 1)) + toggle] * pml_ptr[j + 1];
-            result2 += cos_data[(2 * (j + 2)) + toggle] * pml_ptr[j + 2];
-            result3 += cos_data[(2 * (j + 3)) + toggle] * pml_ptr[j + 3];
-        }
-
-        if ((((i - m) % 2) == 0) || ((m % 2) == 0))
-            result0 += cos_data[(2 * (i / 2)) + toggle] * pml_ptr[(i / 2)];
-
-        result[i - m] = result0 + result1 + result2 + result3;
+        result[i - m] = value;
 
         toggle = (toggle + 1) % 2;
     }

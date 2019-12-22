@@ -4,6 +4,8 @@
 
 // TODO: move to utils
 
+#include "csecond.h"
+
 #include <limits.h>
 #include <stdio.h>
 #include <sys/param.h>

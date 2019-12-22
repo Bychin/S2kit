@@ -9,7 +9,7 @@ int Reduced_SpharmonicTableSize(const int, const int);
 
 int Reduced_Naive_TableSize(const int, const int);
 
-int TableOffset(const int, const int);
+int TableOffset(int, int);
 
 void CosPmlTableGen(const int, const int, double*, double*);
 

@@ -3,6 +3,8 @@
     This is slow but does not require any precomputed functions, and is stable.
 */
 
+#include "naive_synthesis.h"
+
 #include <math.h>
 #include <string.h>
 
@@ -20,36 +22,30 @@
                 (see pmls.c). Note that these Legendres are normalized with norm equal to 1;
     workspace - array of size `2*bw`;
 */
-// TODO check unrolling performance
 void Naive_AnalysisX(double* data, const int bw, const int m, double* weights, double* result,
                      double* plmtable, double* workspace) {
-    // TODO remove memset
-    // make sure result is zeroed out
-    memset(result, 0, sizeof(double) * (bw - m));
+    int size = 2 * bw;
 
-    // apply quadrature weights
     /*
-        We only have to differentiate between even and odd
-        weights when doing something like seminaive, something
-        which involves the dct. In this naive case, the parity of
-        the order of the transform doesn't matter because we are not
-        dividing by sin(x) when precomputing the Legendres (because
-        we are not taking their dct). The plain ol' weights are just fine.
-    */
+        Apply quadrature weights.
 
+        We only have to differentiate between even and odd weights when doing something like seminaive,
+        something which involves the dct. In this naive case, the parity of the order of the transform
+        doesn't matter because we are not dividing by sin(x) when precomputing the Legendres
+        (because we are not taking their dct). The plain weights are just fine.
+    */
     double* wdata = workspace;
-    for (int i = 0; i < 2 * bw; ++i)
+    for (int i = 0; i < size; ++i)
         wdata[i] = data[i] * weights[i];
 
     for (int i = 0; i < bw - m; ++i) {
-        double sum = 0.0;
-
-        for (int j = 0; j < 2 * bw; ++j)
+        double sum = 0.;
+        for (int j = 0; j < size; ++j)
             sum += wdata[j] * plmtable[j];
 
         result[i] = sum;
 
-        plmtable += (2 * bw);
+        plmtable += size;
     }
 }
 
@@ -75,13 +71,12 @@ void Naive_AnalysisX(double* data, const int bw, const int m, double* weights, d
     Note that these Legendres are normalized with norm equal to 1!
 */
 void Naive_SynthesizeX(double* coeffs, const int bw, const int m, double* result, double* plmtable) {
-    // make sure result is zeroed out (useful for zero coeffs)
-    memset(result, 0, sizeof(double) * 2 * bw);
+    memset(result, 0, sizeof(double) * 2 * bw); // make sure result is zeroed out
 
     for (int i = 0; i < bw - m; ++i) {
         double coeff = coeffs[i];
 
-        if (coeff == 0.0) {
+        if (coeff == 0.) {
             plmtable += (2 * bw);
             continue;
         }

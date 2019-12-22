@@ -16,6 +16,8 @@
     the code is set up, you have to multiply the j-th weight by sin(pi*(2j+1)/(4B))
 */
 
+#include "makeweights.h"
+
 #include <math.h>
 
 /*
@@ -27,41 +29,18 @@
 */
 // TODO: move to utils?
 void makeweights(const int bw, double* weights) {
-    double fudge = M_PI / (4. * bw);
+    double coeff = M_PI / (4. * bw);
 
     for (int i = 0; i < 2 * bw; ++i) {
-        double sum = 0.0;
+        double sum = 0.;
         double k = 2. * i + 1.;
 
         for (int j = 0; j < bw; ++j)
-            sum += 1. / (2. * j + 1.) * sin(k * (2. * j + 1.) * fudge);
+            sum += 1. / (2. * j + 1.) * sin(k * (2. * j + 1.) * coeff);
 
-        sum *= sin(k * fudge);
-        sum *= 2. / bw;
+        sum *= 2. * sin(k * coeff) / bw;
 
         weights[i] = sum;
-        weights[i + 2 * bw] = sum * sin(k * fudge);
+        weights[i + 2 * bw] = sum * sin(k * coeff);
     }
 }
-
-// TODO: move to test file
-// just a hack to test the above function
-/*
-#include <stdio.h>
-#include <stdlib.h>
-
-int main(int argc, char** argv) {
-    int bw = atoi(argv[1]);
-
-    double* weights = (double*)malloc(sizeof(double) * 4 * bw);
-
-    makeweights(bw, weights);
-
-    for (int i = 0; i < 2 * bw; i++)
-        printf("%d\t%f\t%f\n", i, weights[i], weights[i + 2 * bw]);
-
-    free(weights);
-
-    return 0;
-}
-*/

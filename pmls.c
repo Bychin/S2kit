@@ -2,6 +2,8 @@
     Source code for generating cosine transforms of Pml and Gml functions.
 */
 
+#include "pmls.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,41 +32,43 @@
     This array will eventually be used by the naive transform algorithm.
     This function will precompute the arrays necessary for the algorithm.
 */
-// TODO what about P_eval
 void PmlTableGen(const int bw, const int m, double* storeplm, double* workspace) {
+    int size = 2 * bw;
+
     double* prevprev = workspace;
-    double* prev = prevprev + (2 * bw);
-    double* temp1 = prev + (2 * bw);
-    double* temp2 = temp1 + (2 * bw);
-    double* temp3 = temp2 + (2 * bw);
-    double* temp4 = temp3 + (2 * bw);
-    double* x_i = temp4 + (2 * bw);
-    double* eval_args = x_i + (2 * bw);
+    double* prev = prevprev + size;
+    double* temp1 = prev + size;
+    double* temp2 = temp1 + size;
+    double* temp3 = temp2 + size;
+    double* temp4 = temp3 + size;
+    double* x_i = temp4 + size;
+    double* eval_args = x_i + size;
 
     // get the evaluation nodes
-    ChebyshevNodes(2 * bw, x_i);
-    AcosOfChebyshevNodes(2 * bw, eval_args);
+    ChebyshevNodes(size, x_i);
+    AcosOfChebyshevNodes(size, eval_args);
 
     // set initial values of first two Pmls
-    for (int i = 0; i < 2 * bw; ++i)
-        prevprev[i] = 0.0;
-    if (m == 0)
-        for (int i = 0; i < 2 * bw; ++i)
+    for (int i = 0; i < size; ++i)
+        prevprev[i] = 0.;
+
+    if (!m)
+        for (int i = 0; i < size; ++i)
             prev[i] = M_SQRT1_2;
     else
-        Pmm_L2(m, eval_args, 2 * bw, prev);
+        Pmm_L2(m, eval_args, size, prev);
 
-    memcpy(storeplm, prev, sizeof(double) * 2 * bw);
+    memcpy(storeplm, prev, sizeof(double) * size);
 
     for (int i = 0; i < bw - m - 1; ++i) {
-        vec_mul(L2_cn(m, m + i), prevprev, temp1, 2 * bw);
-        vec_dot(prev, x_i, temp2, 2 * bw);
-        vec_mul(L2_an(m, m + i), temp2, temp3, 2 * bw);
-        vec_add(temp3, temp1, temp4, 2 * bw); // temp4 now contains P(m,m+i+1)
+        vec_mul(L2_cn(m, m + i), prevprev, temp1, size);
+        vec_dot(prev, x_i, temp2, size);
+        vec_mul(L2_an(m, m + i), temp2, temp3, size);
+        vec_add(temp3, temp1, temp4, size); // temp4 now contains P(m,m+i+1)
 
-        storeplm += (2 * bw);
-        memcpy(storeplm, temp4, sizeof(double) * 2 * bw);
-        memcpy(prevprev, prev, sizeof(double) * 2 * bw);
-        memcpy(prev, temp4, sizeof(double) * 2 * bw);
+        storeplm += size;
+        memcpy(storeplm, temp4, sizeof(double) * size);
+        memcpy(prevprev, prev, sizeof(double) * size);
+        memcpy(prev, temp4, sizeof(double) * size);
     }
 }
