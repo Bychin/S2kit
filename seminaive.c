@@ -124,8 +124,8 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
 
     // scale coefficients prior to taking inverse DCT
     double fudge = 0.5 / sqrt(bw);
-    for (int j = 1; j < 2 * bw; ++j)
-        fcos[j] *= fudge;
+    for (int i = 1; i < 2 * bw; ++i)
+        fcos[i] *= fudge;
     fcos[0] /= sqrt(2. * bw);
 
     // take the inverse dct
@@ -134,8 +134,8 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
 
     // if m is odd, then need to multiply by sin(x) at Chebyshev nodes
     if (m % 2) {
-        for (int j = 0; j < (2 * bw); j++)
-            result[j] *= sin_values[j];
+        for (int i = 0; i < (2 * bw); ++i)
+            result[i] *= sin_values[i];
     }
 
     trans_tableptr = p;
@@ -191,8 +191,8 @@ void SemiNaiveReduced(double* data, const int bw, const int m, double* result, d
     // normalize
     cos_data[0] *= M_SQRT1_2;
     double fudge = 1. / sqrt(2. * n);
-    for (int j = 0; j < n; ++j)
-        cos_data[j] *= fudge;
+    for (int i = 0; i < n; ++i)
+        cos_data[i] *= fudge;
 
     /*
         Do the projections.

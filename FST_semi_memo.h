@@ -11,8 +11,7 @@ void FST_semi_memo(double*, double*, double*, double*, const int, double**, doub
 void InvFST_semi_memo(double*, double*, double*, double*, const int, double**, double*, const int, const int,
                              fftw_plan*, fftw_plan*);
 
-void FZT_semi_memo(double*, double*, double*, double*, const int, double*, double*, const int, fftw_plan*,
-                          double*);
+void FZT_semi_memo(double*, double*, double*, double*, const int, double*, double*, const int, fftw_plan*, double*);
 
 void TransMult(double*, double*, double*, double*, double*, double*, const int);
 

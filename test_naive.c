@@ -79,9 +79,9 @@ int main(int argc, char** argv) {
         relerror[k] = 0.0;
         curmax[k] = 0.0;
 
-        for (int j = 0; j < bw - m; ++j) {
-            double tmp_error = fabs(coeffs[j] - new_coeffs[j]);
-            double tmp_relerror = tmp_error / (fabs(coeffs[j]) + pow(10.0, -50.0));
+        for (int i = 0; i < bw - m; ++i) {
+            double tmp_error = fabs(coeffs[i] - new_coeffs[i]);
+            double tmp_relerror = tmp_error / (fabs(coeffs[i]) + pow(10.0, -50.0));
             curmax[k] = fmax(curmax[k], tmp_error);
             relerror[k] = fmax(relerror[k], tmp_relerror);
         }

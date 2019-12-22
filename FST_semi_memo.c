@@ -19,6 +19,8 @@
     For descriptions on calling these functions, see the documentation preceding each function.
 */
 
+#include "FST_semi_memo.h"
+
 #include <complex.h>
 #include <math.h>
 #include <stdio.h>
@@ -27,7 +29,6 @@
 
 #include <fftw3.h>
 
-#include "FST_semi_memo.h"
 #include "cospmls.h"
 #include "makeweights.h"
 #include "naive_synthesis.h"
@@ -125,11 +126,11 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
     int size = 2 * bw;
 
     // total workspace is (8 * bw^2) + (7 * bw)
-    double* rres = workspace;                 // needs (size * size) = (4 * bw^2)
-    double* ires = rres + (size * size);      // needs (size * size) = (4 * bw^2)
-    double* fltres = ires + (size * size);    // needs bw 
-    double* eval_pts = fltres + bw;           // needs (2*bw) 
-    double* scratchpad = eval_pts + (size); // needs (4 * bw) 
+    double* rres = workspace;               // needs (size * size) = (4 * bw^2)
+    double* ires = rres + (size * size);    // needs (size * size) = (4 * bw^2)
+    double* fltres = ires + (size * size);  // needs bw
+    double* eval_pts = fltres + bw;         // needs (2 * bw)
+    double* scratchpad = eval_pts + (size); // needs (4 * bw)
 
     // do the FFTs along phi
     fftw_execute_split_dft(*FFT_plan, rdata, idata, rres, ires);
@@ -186,8 +187,8 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
     // upper coefficients
     /*
-        If the data is real, we don't have to compute the coeffs whose order is less than 0,
-        i.e. since the data is real, we know that
+        If the data is real, we don't have to compute the coeffs whose
+        order is less than 0, since the data is real, we know that
 
         f-hat(l,-m) = (-1)^m * conjugate(f-hat(l,m)),
 
@@ -196,7 +197,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
     if (dataformat == 1) { // real data
         double coeff = 1.;
         for (int i = 1; i < bw; ++i) {
-            coeff *= -1.; // TODO optimize
+            coeff *= -1.;
             for (int j = i; j < bw; ++j) {
                 int index0 = seanindex(i, j, bw);
                 int index1 = seanindex(-i, j, bw);
@@ -222,7 +223,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
             SemiNaiveReduced(rres + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
                              weights, DCT_plan);
             // load real part of coefficients into output space
-            if ((m % 2) != 0) {
+            if (m % 2) {
                 // TODO memcpy vs for-cycle
                 for (int i = 0; i < m - bw; ++i)
                     rdataptr[i] = -fltres[i];
@@ -235,7 +236,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
             SemiNaiveReduced(ires + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
                              weights, DCT_plan);
             // load imaginary part of coefficients into output space
-            if ((m % 2) != 0) {
+            if (m % 2) {
                 // TODO memcpy vs for-cycle
                 for (int i = 0; i < m - bw; ++i)
                     idataptr[i] = -fltres[i];
@@ -252,7 +253,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
         Naive_AnalysisX(rres + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
                         scratchpad);
         // load real part of coefficients into output space
-        if ((m % 2) != 0) {
+        if (m % 2) {
             // TODO memcpy vs for-cycle
             for (int i = 0; i < m - bw; ++i)
                 rdataptr[i] = -fltres[i];
@@ -265,7 +266,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
         Naive_AnalysisX(ires + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
                         scratchpad);
         // load imaginary part of coefficients into output space
-        if ((m % 2) != 0) {
+        if (m % 2) {
             // TODO memcpy vs for-cycle
             for (int i = 0; i < m - bw; ++i)
                 idataptr[i] = -fltres[i];
@@ -299,7 +300,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw,
                       double** transpose_seminaive_naive_table, double* workspace, const int dataformat,
                       const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {
-    int size = 2 * bw; // TODO size, n???
+    int size = 2 * bw;
 
     // total workspace = (8 * bw^2) + (10 * bw)
     double* rfourdata = workspace;                  // needs (size * size)
@@ -339,6 +340,7 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
             continue;
         }
+
         // naive part
         // real part
         Naive_SynthesizeX(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m]);
@@ -358,11 +360,12 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
     memset(ifourdata + (bw * size), 0, sizeof(double) * size);
 
     /*
-        now if the data is real, we don't have to compute the coefficients whose order is less than 0,
-        since we know that for real data invf-hat(l,-m) = conjugate(invf-hat(l,m)),
-        so use that to get the rest of the real data.
+        If the data is real, we don't have to compute the coeffs whose order is less than 0,
+        i.e. since the data is real, we know that
 
-        dataformat =0 -> samples are complex, =1 -> samples real
+        invf-hat(l,-m) = conjugate(invf-hat(l,m)),
+
+        so use that to get the rest of the coefficients
     */
     if (dataformat == 0) { // complex data
         // do negative m values
@@ -375,10 +378,10 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
                                     sin_values, scratchpad, inv_DCT_plan);
 
                 // store normal, then tranpose before doing inverse fft
-                if ((m % 2) != 0)
+                if (m % 2)
                     for (int i = 0; i < size; ++i) {
-                        rinvfltres[i] = -rinvfltres[i];
-                        iminvfltres[i] = -iminvfltres[i];
+                        rinvfltres[i] *= -1.0;
+                        iminvfltres[i] *= -1.0;
                     }
 
                 memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
@@ -389,15 +392,16 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
                 continue;
             }
+
             // naive part
             Naive_SynthesizeX(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m]);
             Naive_SynthesizeX(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m]);
 
             // store normal, then tranpose before doing inverse fft
-            if ((m % 2) != 0)
+            if (m % 2)
                 for (int i = 0; i < size; ++i) {
-                    rinvfltres[i] = -rinvfltres[i];
-                    iminvfltres[i] = -iminvfltres[i];
+                    rinvfltres[i] *= -1.0;
+                    iminvfltres[i] *= -1.0;
                 }
 
             memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
@@ -417,10 +421,10 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
     }
 
     // normalize
-    double coeff = 1. / (sqrt(2. * M_PI));
+    double normed_coeff = 1. / (sqrt(2. * M_PI));
     for (int i = 0; i < 4 * bw * bw; i++) {
-        rfourdata[i] *= coeff;
-        ifourdata[i] *= coeff;
+        rfourdata[i] *= normed_coeff;
+        ifourdata[i] *= normed_coeff;
     }
 
     fftw_execute_split_dft(*inv_FFT_plan, ifourdata, rfourdata, idata, rdata);
@@ -587,13 +591,13 @@ void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double
     double* spharmonic_result_space = workspace; // needs legendre_size
     double* transpose_spharmonic_result_space = spharmonic_result_space + legendre_size; // needs legendre_size
 
-    double* frres = transpose_spharmonic_result_space + legendre_size; // needs (bw*bw)
-    double* fires = frres + (bw * bw);                                 // needs (bw*bw)
-    double* trres = fires + (bw * bw);                                 // needs (bw*bw)
-    double* tires = trres + (bw * bw);                                 // needs (bw*bw)
+    double* frres = transpose_spharmonic_result_space + legendre_size; // needs (bw * bw)
+    double* fires = frres + (bw * bw);                                 // needs (bw * bw)
+    double* trres = fires + (bw * bw);                                 // needs (bw * bw)
+    double* tires = trres + (bw * bw);                                 // needs (bw * bw)
     double* filtrres = tires + (bw * bw);                              // needs bw
     double* filtires = filtrres + bw;                                  // needs bw
-    double* scratchpad = filtires + bw;                                // needs (8*bw^2)+(10*bw)
+    double* scratchpad = filtires + bw;                                // needs (8 * bw^2) + (10 * bw)
 
     double* weights = (double*)malloc(sizeof(double) * 4 * bw);
     makeweights(bw, weights);
