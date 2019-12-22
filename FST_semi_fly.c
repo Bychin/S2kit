@@ -14,6 +14,7 @@
 
     Utility functions in this package:
     1) seanindex(m,l,bandwidth) - gives the position of the coefficient f-hat(m,l) in the one-row array.
+    2) TODO ComplexMult
 
     For descriptions on calling these functions, see the documentation preceding each function.
 */
@@ -32,30 +33,31 @@
 #include "primitive.h"
 #include "seminaive.h"
 
+// TODO
+void inline ComplexMult(double x, double y, double u, double v, double* real_result, double* imag_result) {
+    real_result = x * u - y * v;
+    imag_result = x * v - y * u;
+}
+
 /*
-    Given bandwidth bw, seanindex(m,l,bw) will give the position of the
-    coefficient f-hat(m,l) in the one-row array that Sean stores the spherical
-    coefficients. This is needed to help preserve the symmetry that the
-    coefficients have: (l = degree, m = order, and abs(m) <= l)
+    Returns the position of the coefficient `f-hat(m,l)` in the one-row
+    array that Sean stores the spherical coefficients. This is needed
+    to help preserve the symmetry that the coefficients have: 
+    (`l` = degree, `m` = order, and `abs(m)` <= `l`)
 
     f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
 */
 int seanindex(int m, int l, int bw) {
-    int bigL;
-
-    bigL = bw - 1;
+    int bigL = bw - 1;
 
     if (m >= 0)
         return (m * (bigL + 1) - ((m * (m - 1)) / 2) + (l - m));
-    else
-        return (((bigL * (bigL + 3)) / 2) + 1 + ((bigL + m) * (bigL + m + 1) / 2) + (l - abs(m)));
+
+    return (((bigL * (bigL + 3)) / 2) + 1 + ((bigL + m) * (bigL + m + 1) / 2) + (l - abs(m)));
 }
 
-/************************************************************************/
 /*
-  performs a spherical harmonic transform using the semi-naive
-  and naive algorithms
-
+    Performs a spherical harmonic transform using the semi-naive and naive algorithms.
 
   bw -> bandwidth of problem
   size -> size = 2*bw -> dimension of input array (recall that
@@ -99,7 +101,6 @@ int seanindex(int m, int l, int bw) {
 
    dataformat =0 -> samples are complex, =1 -> samples real
 */
-
 void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs, int bw, double* workspace,
                   int dataformat, int cutoff, fftw_plan* dctPlan, fftw_plan* fftPlan, double* weights) {
     int size, m, i, j;
@@ -560,7 +561,7 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
 
     for (m = 0; m < bw; m++) {
         for (l = m; l < bw; l++) {
-            compmult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr[l - m], irptr[l - m]);
+            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr[l - m], irptr[l - m]);
 
             rrptr[l - m] *= sqrt(4 * M_PI / (2 * l + 1));
             irptr[l - m] *= sqrt(4 * M_PI / (2 * l + 1));
@@ -572,8 +573,8 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
     }
     for (m = bw + 1; m < size; m++) {
         for (l = size - m; l < bw; l++) {
-            compmult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - size + m], idptr[l - size + m], rrptr[l - size + m],
-                     irptr[l - size + m]);
+            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - size + m], idptr[l - size + m],
+                        rrptr[l - size + m], irptr[l - size + m]);
 
             rrptr[l - size + m] *= sqrt(4 * M_PI / (2 * l + 1));
             irptr[l - size + m] *= sqrt(4 * M_PI / (2 * l + 1));

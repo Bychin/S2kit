@@ -1,24 +1,21 @@
-#ifndef _FSTSEMI_MEMO_H
-#define _FSTSEMI_MEMO_H
+#ifndef _FST_SEMI_MEMO_H
+#define _FST_SEMI_MEMO_H
 
 #include <fftw3.h>
 
-#define compmult(a, b, c, d, e, f)                                                                                     \
-    (e) = ((a) * (c)) - ((b) * (d));                                                                                   \
-    (f) = ((a) * (d)) + ((b) * (c))
+extern int seanindex(const int, const int, const int);
 
-extern int seanindex(int, int, int);
+extern void FST_semi_memo(double*, double*, double*, double*, const int, double**, double*, const int, const int,
+                          fftw_plan*, fftw_plan*, double*);
 
-extern void FST_semi_memo(double*, double*, double*, double*, int, double**, double*, int, int, fftw_plan*, fftw_plan*,
+extern void InvFST_semi_memo(double*, double*, double*, double*, const int, double**, double*, const int, const int,
+                             fftw_plan*, fftw_plan*);
+
+extern void FZT_semi_memo(double*, double*, double*, double*, const int, double*, double*, const int, fftw_plan*,
                           double*);
 
-extern void InvFST_semi_memo(double*, double*, double*, double*, int, double**, double*, int, int, fftw_plan*,
-                             fftw_plan*);
+extern void TransMult(double*, double*, double*, double*, double*, double*, const int);
 
-extern void FZT_semi_memo(double*, double*, double*, double*, int, double*, double*, int, fftw_plan*, double*);
+extern void Conv2Sphere_semi_memo(double*, double*, double*, double*, double*, double*, const int, double*);
 
-extern void TransMult(double*, double*, double*, double*, double*, double*, int);
-
-extern void Conv2Sphere_semi_memo(double*, double*, double*, double*, double*, double*, int, double*);
-
-#endif // _FSTSEMI_MEMO_H
+#endif // _FST_SEMI_MEMO_H

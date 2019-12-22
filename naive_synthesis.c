@@ -75,16 +75,19 @@ void Naive_AnalysisX(double* data, const int bw, const int m, double* weights, d
     Note that these Legendres are normalized with norm equal to 1!
 */
 void Naive_SynthesizeX(double* coeffs, const int bw, const int m, double* result, double* plmtable) {
-    // TODO remove memset
-    // make sure result is zeroed out
+    // make sure result is zeroed out (useful for zero coeffs)
     memset(result, 0, sizeof(double) * 2 * bw);
 
     for (int i = 0; i < bw - m; ++i) {
-        double coef = coeffs[i];
+        double coeff = coeffs[i];
 
-        if (coef != 0.0) // TODO == ?
-            for (int j = 0; j < 2 * bw; ++j)
-                result[j] += coef * plmtable[j];
+        if (coeff == 0.0) {
+            plmtable += (2 * bw);
+            continue;
+        }
+
+        for (int j = 0; j < 2 * bw; ++j)
+            result[j] += coeff * plmtable[j];
 
         plmtable += (2 * bw);
     }

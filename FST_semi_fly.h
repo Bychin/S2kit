@@ -1,11 +1,7 @@
-#ifndef _FSTSEMI_FLY_H
-#define _FSTSEMI_FLY_H
+#ifndef _FST_SEMI_FLY_H
+#define _FST_SEMI_FLY_H
 
 #include <fftw3.h>
-
-#define compmult(a, b, c, d, e, f)                                                                                     \
-    (e) = ((a) * (c)) - ((b) * (d));                                                                                   \
-    (f) = ((a) * (d)) + ((b) * (c))
 
 extern int seanindex(int, int, int);
 
@@ -19,4 +15,4 @@ extern void FZT_semi_fly(double*, double*, double*, double*, int, double*, int, 
 
 extern void Conv2Sphere_semi_fly(double*, double*, double*, double*, double*, double*, int, double*);
 
-#endif // _FSTSEMI_FLY_H
+#endif // _FST_SEMI_FLY_H

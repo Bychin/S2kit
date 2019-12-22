@@ -200,6 +200,7 @@ void SemiNaiveReduced(double* data, const int bw, const int m, double* result, d
         stripped out so the indexing is complicated somewhat
     */
 
+    // TODO bring back the original one
     /******** this is the original loop
 
     int toggle = 0 ;
