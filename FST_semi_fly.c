@@ -33,10 +33,10 @@
 #include "primitive.h"
 #include "seminaive.h"
 
-// TODO
+// TODO (move to utils?)
 void inline ComplexMult(double x, double y, double u, double v, double* real_result, double* imag_result) {
-    real_result = x * u - y * v;
-    imag_result = x * v - y * u;
+    *real_result = x * u - y * v;
+    *imag_result = x * v - y * u;
 }
 
 /*
@@ -561,7 +561,7 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
 
     for (m = 0; m < bw; m++) {
         for (l = m; l < bw; l++) {
-            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr[l - m], irptr[l - m]);
+            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr + l - m, irptr + l - m);
 
             rrptr[l - m] *= sqrt(4 * M_PI / (2 * l + 1));
             irptr[l - m] *= sqrt(4 * M_PI / (2 * l + 1));
@@ -574,7 +574,7 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
     for (m = bw + 1; m < size; m++) {
         for (l = size - m; l < bw; l++) {
             ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - size + m], idptr[l - size + m],
-                        rrptr[l - size + m], irptr[l - size + m]);
+                        rrptr + l - size + m, irptr + l - size + m);
 
             rrptr[l - size + m] *= sqrt(4 * M_PI / (2 * l + 1));
             irptr[l - size + m] *= sqrt(4 * M_PI / (2 * l + 1));

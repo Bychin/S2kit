@@ -34,11 +34,11 @@
 #include "primitive.h"
 #include "seminaive.h"
 
-// TODO
+// TODO (move to utils?)
 void inline ComplexMult(const double x, const double y, const double u, const double v,
                         double* real_result, double* imag_result) {
-    real_result = x * u - y * v;
-    imag_result = x * v - y * u;
+    *real_result = x * u - y * v;
+    *imag_result = x * v - y * u;
 }
 
 /*
@@ -121,7 +121,7 @@ int seanindex(const int m, const int l, const int bw) {
 // TODO: dataformat to enum?
 void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeffs, const int bw,
                    double** seminaive_naive_table, double* workspace, const int dataformat, const int cutoff,
-                   fftw_plan* dctPlan, fftw_plan* fftPlan, double* weights) {
+                   fftw_plan* DCT_plan, fftw_plan* FFT_plan, double* weights) {
     int size = 2 * bw;
 
     // total workspace is (8 * bw^2) + (7 * bw)
@@ -129,10 +129,10 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
     double* ires = rres + (size * size);      // needs (size * size) = (4 * bw^2)
     double* fltres = ires + (size * size);    // needs bw 
     double* eval_pts = fltres + bw;           // needs (2*bw) 
-    double* scratchpad = eval_pts + (2 * bw); // needs (4 * bw) 
+    double* scratchpad = eval_pts + (size); // needs (4 * bw) 
 
     // do the FFTs along phi
-    fftw_execute_split_dft(*fftPlan, rdata, idata, rres, ires);
+    fftw_execute_split_dft(*FFT_plan, rdata, idata, rres, ires);
 
     /*
         normalize
@@ -158,13 +158,13 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
     for (int m = 0; m < bw; ++m) {
         if (m < cutoff) { // semi-naive part
             // real part
-            SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, dctPlan);
+            SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
             // load real part of coefficients into output space
             memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
             rdataptr += bw - m;
 
             // imaginary part
-            SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, dctPlan);
+            SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
             // load imaginary part of coefficients into output space
             memcpy(idataptr, fltres, sizeof(double) * (bw - m));
             idataptr += bw - m;
@@ -220,7 +220,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
         if ((size - m) < cutoff) { // semi-naive part
             // real part
             SemiNaiveReduced(rres + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
-                             weights, dctPlan);
+                             weights, DCT_plan);
             // load real part of coefficients into output space
             if ((m % 2) != 0) {
                 // TODO memcpy vs for-cycle
@@ -233,7 +233,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
             // imaginary part
             SemiNaiveReduced(ires + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
-                             weights, dctPlan);
+                             weights, DCT_plan);
             // load imaginary part of coefficients into output space
             if ((m % 2) != 0) {
                 // TODO memcpy vs for-cycle
@@ -298,17 +298,17 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 // TODO check memset
 void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw,
                       double** transpose_seminaive_naive_table, double* workspace, const int dataformat,
-                      const int cutoff, fftw_plan* idctPlan, fftw_plan* ifftPlan) {
+                      const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {
     int size = 2 * bw; // TODO size, n???
 
     // total workspace = (8 * bw^2) + (10 * bw)
     double* rfourdata = workspace;                  // needs (size * size)
     double* ifourdata = rfourdata + (size * size);  // needs (size * size)
     double* rinvfltres = ifourdata + (size * size); // needs (2 * bw)
-    double* iminvfltres = rinvfltres + (2 * bw);    // needs (2 * bw)
-    double* sin_values = iminvfltres + (2 * bw);    // needs (2 * bw)
-    double* eval_pts = sin_values + (2 * bw);       // needs (2 * bw)
-    double* scratchpad = eval_pts + (2 * bw);       // needs (2 * bw)
+    double* iminvfltres = rinvfltres + (size);      // needs (2 * bw)
+    double* sin_values = iminvfltres + (size);      // needs (2 * bw)
+    double* eval_pts = sin_values + (size);         // needs (2 * bw)
+    double* scratchpad = eval_pts + (size);         // needs (2 * bw)
 
     // load up the sin_values array
     AcosOfChebyshevNodes(size, eval_pts);
@@ -324,11 +324,11 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
         if (m < cutoff) { // semi-naive part
             // real part
             InvSemiNaiveReduced(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m], sin_values,
-                                scratchpad, idctPlan);
+                                scratchpad, inv_DCT_plan);
 
             // imaginary part
             InvSemiNaiveReduced(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m], sin_values,
-                                scratchpad, idctPlan);
+                                scratchpad, inv_DCT_plan);
 
             // store normal, then tranpose before doing inverse fft
             memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
@@ -370,9 +370,9 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
         for (int m = bw + 1; m < size; ++m) {
             if ((size - m) < cutoff) { // semi-naive part
                 InvSemiNaiveReduced(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m],
-                                    sin_values, scratchpad, idctPlan);
+                                    sin_values, scratchpad, inv_DCT_plan);
                 InvSemiNaiveReduced(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m],
-                                    sin_values, scratchpad, idctPlan);
+                                    sin_values, scratchpad, inv_DCT_plan);
 
                 // store normal, then tranpose before doing inverse fft
                 if ((m % 2) != 0)
@@ -418,12 +418,12 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
     // normalize
     double coeff = 1. / (sqrt(2. * M_PI));
-    for (i = 0; i < 4 * bw * bw; i++) {
+    for (int i = 0; i < 4 * bw * bw; i++) {
         rfourdata[i] *= coeff;
         ifourdata[i] *= coeff;
     }
 
-    fftw_execute_split_dft(*ifftPlan, ifourdata, rfourdata, idata, rdata);
+    fftw_execute_split_dft(*inv_FFT_plan, ifourdata, rfourdata, idata, rdata);
 }
 
 /*
@@ -447,7 +447,7 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 */
 // TODO memset?
 void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, const int bw, double* cos_pml_table,
-                   double* workspace, const int dataformat, fftw_plan* dctPlan, double* weights) {
+                   double* workspace, const int dataformat, fftw_plan* DCT_plan, double* weights) {
     int size = 2 * bw;
 
     double* r0 = workspace;         // needs (2 * bw)
@@ -473,10 +473,10 @@ void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, con
     }
 
     // real part
-    SemiNaiveReduced(r0, bw, 0, rres, scratchpad, cos_pml_table, weights, dctPlan);
+    SemiNaiveReduced(r0, bw, 0, rres, scratchpad, cos_pml_table, weights, DCT_plan);
 
     if (dataformat == 0) // if data is complex, do imaginary part
-        SemiNaiveReduced(i0, bw, 0, ires, scratchpad, cos_pml_table, weights, dctPlan);
+        SemiNaiveReduced(i0, bw, 0, ires, scratchpad, cos_pml_table, weights, DCT_plan);
     else // otherwise set coefficients to zero
         memset(ires, 0, sizeof(double) * size);
 }
@@ -503,7 +503,7 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
 
     for (int m = 0; m < bw; ++m) {
         for (int l = m; l < bw; ++l) {
-            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr[l - m], irptr[l - m]);
+            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr + l - m, irptr + l - m);
 
             rrptr[l - m] *= sqrt(4. * M_PI / (2. * l + 1.));
             irptr[l - m] *= sqrt(4. * M_PI / (2. * l + 1.));
@@ -518,7 +518,7 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
     for (int m = bw + 1; m < size; ++m) {
         for (int l = size - m; l < bw; ++l) {
             ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - size + m], idptr[l - size + m],
-                        rrptr[l - size + m], irptr[l - size + m]);
+                        rrptr + l - size + m, irptr + l - size + m);
 
             rrptr[l - size + m] *= sqrt(4. * M_PI / (2. * l + 1.));
             irptr[l - size + m] *= sqrt(4. * M_PI / (2. * l + 1.));
@@ -564,139 +564,96 @@ void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, 
    Need space for spharmonic tables and local workspace and
    scratchpad space for FST_semi
 
-   Let legendreSize = Reduced_Naive_TableSize(bw,cutoff) +
+   Let legendre_size = Reduced_Naive_TableSize(bw,cutoff) +
                       Reduced_SpharmonicTableSize(bw,cutoff)
 
    Then the workspace needs to be this large:
 
-   2 * legendreSize  +
+   2 * legendre_size  +
    8 * (bw*bw)  + 10*bw +
    4 * (bw*bw) + 2*bw
 
    for a total of
 
-   2 * legendreSize  +
+   2 * legendre_size  +
    12 * (bw*bw) + 12*bw ;
 */
 void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double* ifilter, double* rres, double* ires,
                            const int bw, double* workspace) {
-    int size, spharmonic_bound;
-    int legendreSize, cutoff;
-    double *frres, *fires, *filtrres, *filtires, *trres, *tires;
-    double **spharmonic_pml_table, **transpose_spharmonic_pml_table;
-    double *spharmonic_result_space, *transpose_spharmonic_result_space;
-    double* scratchpad;
+    int size = 2 * bw;
+    int cutoff = bw; // TODO move to args?
+    int legendre_size = Reduced_Naive_TableSize(bw, cutoff) + Reduced_SpharmonicTableSize(bw, cutoff);
 
-    /* fftw */
-    int rank, howmany_rank;
-    fftw_iodim dims[1], howmany_dims[1];
+    double* spharmonic_result_space = workspace; // needs legendre_size
+    double* transpose_spharmonic_result_space = spharmonic_result_space + legendre_size; // needs legendre_size
 
-    /* forward transform stuff */
-    fftw_plan dctPlan, fftPlan;
-    double* weights;
+    double* frres = transpose_spharmonic_result_space + legendre_size; // needs (bw*bw)
+    double* fires = frres + (bw * bw);                                 // needs (bw*bw)
+    double* trres = fires + (bw * bw);                                 // needs (bw*bw)
+    double* tires = trres + (bw * bw);                                 // needs (bw*bw)
+    double* filtrres = tires + (bw * bw);                              // needs bw
+    double* filtires = filtrres + bw;                                  // needs bw
+    double* scratchpad = filtires + bw;                                // needs (8*bw^2)+(10*bw)
 
-    /* inverse transform stuff */
-    fftw_plan idctPlan, ifftPlan;
-
-    size = 2 * bw;
-    cutoff = bw; // TODO move to args?
-    legendreSize = Reduced_Naive_TableSize(bw, cutoff) + Reduced_SpharmonicTableSize(bw, cutoff);
-
-    /* assign space */
-
-    spharmonic_bound = legendreSize;
-
-    spharmonic_result_space = workspace; /* needs legendreSize */
-
-    transpose_spharmonic_result_space = spharmonic_result_space + legendreSize; /* needs legendreSize */
-
-    frres = transpose_spharmonic_result_space + legendreSize; /* needs (bw*bw) */
-    fires = frres + (bw * bw);                                /* needs (bw*bw) */
-    trres = fires + (bw * bw);                                /* needs (bw*bw) */
-    tires = trres + (bw * bw);                                /* needs (bw*bw) */
-    filtrres = tires + (bw * bw);                             /* needs bw */
-    filtires = filtrres + bw;                                 /* needs bw */
-    scratchpad = filtires + bw;                               /* needs (8*bw^2)+(10*bw) */
-
-    /* allocate space, and compute, the weights for this bandwidth */
-    weights = (double*)malloc(sizeof(double) * 4 * bw);
+    double* weights = (double*)malloc(sizeof(double) * 4 * bw);
     makeweights(bw, weights);
 
-    /* make the fftw plans */
+    // Make DCT plans. Note that I will be using the GURU interface to execute these plans within the routines
+    fftw_plan DCT_plan = fftw_plan_r2r_1d(size, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
+    fftw_plan inv_DCT_plan = fftw_plan_r2r_1d(size, weights, rdata, FFTW_REDFT01, FFTW_ESTIMATE);
 
-    /* make DCT plans -> note that I will be using the GURU
-       interface to execute these plans within the routines*/
-
-    /* forward DCT */
-    dctPlan = fftw_plan_r2r_1d(2 * bw, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
-
-    /* inverse DCT */
-    idctPlan = fftw_plan_r2r_1d(2 * bw, weights, rdata, FFTW_REDFT01, FFTW_ESTIMATE);
-
-    /*
-      fft "preamble" ;
-      note that this plan places the output in a transposed array
-    */
-    rank = 1;
-    dims[0].n = 2 * bw;
+    // fftw "preamble"
+    // Note that FFT plan places the output in a transposed array
+    int rank = 1;
+    fftw_iodim dims[rank];
+    dims[0].n = size;
     dims[0].is = 1;
-    dims[0].os = 2 * bw;
-    howmany_rank = 1;
-    howmany_dims[0].n = 2 * bw;
-    howmany_dims[0].is = 2 * bw;
+    dims[0].os = size;
+
+    int howmany_rank = 1;
+    fftw_iodim howmany_dims[howmany_rank];
+    howmany_dims[0].n = size;
+    howmany_dims[0].is = size;
     howmany_dims[0].os = 1;
 
-    /* forward fft */
-    fftPlan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
-                                       workspace + (4 * bw * bw), FFTW_ESTIMATE);
+    fftw_plan FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
+                                                  workspace + (4 * bw * bw), FFTW_ESTIMATE);
 
-    /*
-      now plan for inverse fft - note that this plans assumes
-      that I'm working with a transposed array, e.g. the inputs
-      for a length 2*bw transform are placed every 2*bw apart,
-      the output will be consecutive entries in the array
-    */
+    // Note that FFT plans assumes that I'm working with a transposed array, e.g. the inputs for a length 2*bw transform
+    // are placed every 2*bw apart, the output will be consecutive entries in the array
+
     rank = 1;
-    dims[0].n = 2 * bw;
-    dims[0].is = 2 * bw;
+    dims[0].n = size;
+    dims[0].is = size;
     dims[0].os = 1;
+
     howmany_rank = 1;
-    howmany_dims[0].n = 2 * bw;
+    howmany_dims[0].n = size;
     howmany_dims[0].is = 1;
-    howmany_dims[0].os = 2 * bw;
+    howmany_dims[0].os = size;
 
-    /* inverse fft */
-    ifftPlan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
-                                        workspace + (4 * bw * bw), FFTW_ESTIMATE);
+    fftw_plan inv_FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
+                                                      workspace + (4 * bw * bw), FFTW_ESTIMATE);
 
-    /* precompute the associated Legendre fcts */
-    spharmonic_pml_table = Spharmonic_Pml_Table(bw, spharmonic_result_space, scratchpad);
-
-    transpose_spharmonic_pml_table =
+    // precompute the associated Legendre fcts
+    double** spharmonic_pml_table = Spharmonic_Pml_Table(bw, spharmonic_result_space, scratchpad);
+    double** transpose_spharmonic_pml_table =
         Transpose_Spharmonic_Pml_Table(spharmonic_pml_table, bw, transpose_spharmonic_result_space);
-    FST_semi_memo(rdata, idata, frres, fires, bw, spharmonic_pml_table, scratchpad, 1, bw, &dctPlan, &fftPlan, weights);
 
-    FZT_semi_memo(rfilter, ifilter, filtrres, filtires, bw, spharmonic_pml_table[0], scratchpad, 1, &dctPlan, weights);
+    FST_semi_memo(rdata, idata, frres, fires, bw, spharmonic_pml_table, scratchpad, 1, bw, &DCT_plan, &FFT_plan, weights);
+    FZT_semi_memo(rfilter, ifilter, filtrres, filtires, bw, spharmonic_pml_table[0], scratchpad, 1, &DCT_plan, weights);
 
     TransMult(frres, fires, filtrres, filtires, trres, tires, bw);
 
-    InvFST_semi_memo(trres, tires, rres, ires, bw, transpose_spharmonic_pml_table, scratchpad, 1, bw, &idctPlan,
-                     &ifftPlan);
+    InvFST_semi_memo(trres, tires, rres, ires, bw, transpose_spharmonic_pml_table, scratchpad, 1, bw, &inv_DCT_plan,
+                     &inv_FFT_plan);
 
     free(weights);
-
-    /***
-        have to free the memory that was allocated in
-        Spharmonic_Pml_Table() and
-        Transpose_Spharmonic_Pml_Table()
-    ***/
-
     free(spharmonic_pml_table);
     free(transpose_spharmonic_pml_table);
 
-    /* destroy plans */
-    fftw_destroy_plan(ifftPlan);
-    fftw_destroy_plan(fftPlan);
-    fftw_destroy_plan(idctPlan);
-    fftw_destroy_plan(dctPlan);
+    fftw_destroy_plan(inv_FFT_plan);
+    fftw_destroy_plan(FFT_plan);
+    fftw_destroy_plan(inv_DCT_plan);
+    fftw_destroy_plan(DCT_plan);
 }

@@ -75,21 +75,21 @@ int main(int argc, char** argv) {
     double* workspace = (double*)malloc(sizeof(double) * ((10 * (bw * bw)) + (24 * bw)));
 
     // Make DCT plans. Note that I will be using the GURU interface to execute these plans within the routines
-    fftw_plan DCT_plan = fftw_plan_r2r_1d(2 * bw, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
-    fftw_plan inv_DCT_plan = fftw_plan_r2r_1d(2 * bw, weights, rdata, FFTW_REDFT01, FFTW_ESTIMATE);
+    fftw_plan DCT_plan = fftw_plan_r2r_1d(size, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
+    fftw_plan inv_DCT_plan = fftw_plan_r2r_1d(size, weights, rdata, FFTW_REDFT01, FFTW_ESTIMATE);
 
     // fftw "preamble"
     // Note that FFT plan places the output in a transposed array
     int rank = 1;
     fftw_iodim dims[rank];
-    dims[0].n = 2 * bw;
+    dims[0].n = size;
     dims[0].is = 1;
-    dims[0].os = 2 * bw;
+    dims[0].os = size;
 
     int howmany_rank = 1;
     fftw_iodim howmany_dims[howmany_rank];
-    howmany_dims[0].n = 2 * bw;
-    howmany_dims[0].is = 2 * bw;
+    howmany_dims[0].n = size;
+    howmany_dims[0].is = size;
     howmany_dims[0].os = 1;
 
     fftw_plan FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
@@ -99,14 +99,14 @@ int main(int argc, char** argv) {
     // are placed every 2*bw apart, the output will be consecutive entries in the array
 
     rank = 1;
-    dims[0].n = 2 * bw;
-    dims[0].is = 2 * bw;
+    dims[0].n = size;
+    dims[0].is = size;
     dims[0].os = 1;
 
     howmany_rank = 1;
-    howmany_dims[0].n = 2 * bw;
+    howmany_dims[0].n = size;
     howmany_dims[0].is = 1;
-    howmany_dims[0].os = 2 * bw;
+    howmany_dims[0].os = size;
 
     fftw_plan inv_FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
                                                       workspace + (4 * bw * bw), FFTW_ESTIMATE);

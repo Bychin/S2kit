@@ -95,10 +95,10 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
         else
             assoc_offset = coeffs + (i % 2);
 
-        double* fcos0 = 0.0;
-        double* fcos1 = 0.0;
-        double* fcos2 = 0.0;
-        double* fcos3 = 0.0;
+        double fcos0 = 0.0;
+        double fcos1 = 0.0;
+        double fcos2 = 0.0;
+        double fcos3 = 0.0;
 
         int rowsize = Transpose_RowSize(i, m, bw);
         int j = 0;
@@ -134,7 +134,7 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
 
     // if m is odd, then need to multiply by sin(x) at Chebyshev nodes
     if (m % 2) {
-        for (j = 0; j < (2 * bw); j++)
+        for (int j = 0; j < (2 * bw); j++)
             result[j] *= sin_values[j];
     }
 

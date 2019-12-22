@@ -3,16 +3,16 @@
 
 #include <fftw3.h>
 
-extern int seanindex(int, int, int);
+int seanindex(const int, const int, const int);
 
-extern void TransMult(double*, double*, double*, double*, double*, double*, int);
+void TransMult(double*, double*, double*, double*, double*, double*, const int);
 
-extern void FST_semi_fly(double*, double*, double*, double*, int, double*, int, int, fftw_plan*, fftw_plan*, double*);
+void FST_semi_fly(double*, double*, double*, double*, const int, double*, const int, const int, fftw_plan*, fftw_plan*, double*);
 
-extern void InvFST_semi_fly(double*, double*, double*, double*, int, double*, int, int, fftw_plan*, fftw_plan*);
+void InvFST_semi_fly(double*, double*, double*, double*, int, double*, int, int, fftw_plan*, fftw_plan*);
 
-extern void FZT_semi_fly(double*, double*, double*, double*, int, double*, int, fftw_plan*, double*);
+void FZT_semi_fly(double*, double*, double*, double*, int, double*, int, fftw_plan*, double*);
 
-extern void Conv2Sphere_semi_fly(double*, double*, double*, double*, double*, double*, int, double*);
+void Conv2Sphere_semi_fly(double*, double*, double*, double*, double*, double*, int, double*);
 
 #endif // _FST_SEMI_FLY_H
