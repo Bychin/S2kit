@@ -2,14 +2,16 @@
     Source code for generating cosine transforms of Pml and Gml functions.
 */
 
-#include "pmls.h"
+#include "pml.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/primitive.h"
+#include "pmm.h"
+#include "util/chebyshev_nodes.h"
+#include "util/util.h"
 
 /*
     Generates all of the Pmls for a specified value of `m`.
@@ -49,6 +51,7 @@ void PmlTableGen(const int bw, const int m, double* storeplm, double* workspace)
     AcosOfChebyshevNodes(size, eval_args);
 
     // set initial values of first two Pmls
+    // TODO add memcpy
     for (int i = 0; i < size; ++i)
         prevprev[i] = 0.;
 

@@ -13,7 +13,7 @@
 
 #include <fftw3.h>
 
-#include "cospmls.h"
+#include "legendre_polynomials/cospml.h"
 
 /* 
     Computes the inverse Legendre transform using the transposed seminaive algorithm.
@@ -50,7 +50,7 @@
             of the Legendre series at `2*bw` Chebyshev nodes;
    trans_cos_pml_table - double pointer to array representing
                          the linearized form of trans(P) above.
-                         See cospmls.{h,c} for a description
+                         See cospml.{h,c} for a description
                          of the function `Transpose_CosPmlTableGen()`
                          which generates this array;
    sin_values - when `m` is odd, need to factor in the sin(x) that

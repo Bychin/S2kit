@@ -16,7 +16,7 @@
     the code is set up, you have to multiply the j-th weight by sin(pi*(2j+1)/(4B))
 */
 
-#include "makeweights.h"
+#include "weights.h"
 
 #include <math.h>
 
@@ -27,7 +27,6 @@
     weights - pointer to double array of length `4*bw`, this array will contain the even and odd weights,
         even weights start at `weights[0]`, and odd weights start at `weights[2*bw]`
 */
-// TODO: move to utils?
 void makeweights(const int bw, double* weights) {
     double coeff = M_PI / (4. * bw);
 

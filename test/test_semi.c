@@ -17,10 +17,10 @@
 
 #include <fftw3.h>
 
-#include "cospmls.h"
-#include "makeweights.h"
-#include "util/primitive.h"
-#include "seminaive.h"
+#include "legendre_polynomials/cospml.h"
+#include "legendre_transform/seminaive.h"
+#include "legendre_transform/weights.h"
+#include "util/chebyshev_nodes.h"
 
 #include "util/csecond.h"
 

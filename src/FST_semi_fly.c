@@ -26,12 +26,12 @@
 
 #include <fftw3.h>
 
-#include "cospmls.h"
-#include "makeweights.h"
-#include "naive_synthesis.h"
-#include "pmls.h"
-#include "util/primitive.h"
-#include "seminaive.h"
+#include "legendre_polynomials/cospml.h"
+#include "legendre_polynomials/pml.h"
+#include "legendre_transform/naive.h"
+#include "legendre_transform/seminaive.h"
+#include "legendre_transform/weights.h"
+#include "util/chebyshev_nodes.h"
 
 // TODO (move to utils?)
 void inline ComplexMult(const double x, const double y, const double u, const double v,

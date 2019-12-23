@@ -1,6 +1,6 @@
-#ifndef _PMLS_H
-#define _PMLS_H
+#ifndef _PML_H
+#define _PML_H
 
 void PmlTableGen(const int, const int, double*, double*);
 
-#endif // _PMLS_H
+#endif // _PML_H

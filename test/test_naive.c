@@ -21,9 +21,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "makeweights.h"
-#include "naive_synthesis.h"
-#include "pmls.h"
+#include "legendre_polynomials/pml.h"
+#include "legendre_transform/naive.h"
+#include "legendre_transform/weights.h"
 
 #include "util/csecond.h"
 

@@ -1,5 +1,5 @@
-#ifndef _COSPMLS_H
-#define _COSPMLS_H
+#ifndef _COSPML_H
+#define _COSPML_H
 
 int TableSize(const int, const int);
 
@@ -27,4 +27,4 @@ double** SemiNaive_Naive_Pml_Table(const int, const int, double*, double*);
 
 double** Transpose_SemiNaive_Naive_Pml_Table(double**, const int, const int, double*, double*);
 
-#endif // _COSPMLS_H
+#endif // _COSPML_H

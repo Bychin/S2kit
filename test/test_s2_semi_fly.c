@@ -51,7 +51,7 @@
 #include <fftw3.h>
 
 #include "FST_semi_fly.h"
-#include "makeweights.h"
+#include "legendre_transform/weights.h"
 
 #include "util/csecond.h"
 

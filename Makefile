@@ -6,6 +6,7 @@ FFTWLIB = -L$(FFTWDIR)/lib -lfftw3
 
 SRC_DIR = src
 SRC_INC = -I$(SRC_DIR)/
+
 TEST_DIR = test
 BUILD_DIR = build
 BIN_DIR = bin
@@ -17,16 +18,17 @@ CFLAGS = -O3 ${FFTWINC} ${SRC_INC} -std=c11 -m64 -fPIC -U__STRICT_ANSI__
 LDFLAGS = -lm -m64 -fPIC
 
 # naive
-NAIVESRC = primitive.c pmls.c naive_synthesis.c makeweights.c csecond.c
+# TODO check src
+NAIVESRC = chebyshev_nodes.c pmm.c util.c pml.c naive.c weights.c csecond.c
 NAIVEOBJ = $(addsuffix .o,$(basename $(NAIVESRC)))
 
 # semi-naive
-SEMISRC = pmls.c cospmls.c seminaive.c csecond.c primitive.c makeweights.c
+SEMISRC = chebyshev_nodes.c pmm.c pml.c cospml.c seminaive.c csecond.c util.c weights.c
 SEMIOBJ = $(addsuffix .o,$(basename $(SEMISRC)))
 
 # semi-naive spherical transform and convolution
-FSTSEMISRC = $(SEMISRC) naive_synthesis.c
-FSTSEMIOBJ = $(SEMIOBJ) naive_synthesis.o
+FSTSEMISRC = $(SEMISRC) naive.c
+FSTSEMIOBJ = $(SEMIOBJ) naive.o
 FSTSEMIOBJFLY  = $(FSTSEMIOBJ) FST_semi_fly.o
 FSTSEMIOBJMEMO = $(FSTSEMIOBJ) FST_semi_memo.o
 
@@ -110,23 +112,29 @@ FST_semi_fly.o:
 FST_semi_memo.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/FST_semi_memo.o $(SRC_DIR)/FST_semi_memo.c
 
-cospmls.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/cospmls.o $(SRC_DIR)/cospmls.c
+cospml.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/cospml.o $(SRC_DIR)/legendre_polynomials/cospml.c
 
-makeweights.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/makeweights.o $(SRC_DIR)/makeweights.c
+pml.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pml.o $(SRC_DIR)/legendre_polynomials/pml.c
 
-naive_synthesis.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/naive_synthesis.o $(SRC_DIR)/naive_synthesis.c
+pmm.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pmm.o $(SRC_DIR)/legendre_polynomials/pmm.c
 
-pmls.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pmls.o $(SRC_DIR)/pmls.c
-
-primitive.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/primitive.o $(SRC_DIR)/util/primitive.c
+naive.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/naive.o $(SRC_DIR)/legendre_transform/naive.c
 
 seminaive.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/seminaive.o $(SRC_DIR)/seminaive.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/seminaive.o $(SRC_DIR)/legendre_transform/seminaive.c
+
+weights.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/weights.o $(SRC_DIR)/legendre_transform/weights.c
+
+chebyshev_nodes.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/chebyshev_nodes.o $(SRC_DIR)/util/chebyshev_nodes.c
+
+util.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/util.o $(SRC_DIR)/util/util.c
 
 csecond.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/csecond.o $(TEST_DIR)/util/csecond.c

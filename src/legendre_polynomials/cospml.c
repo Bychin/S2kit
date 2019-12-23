@@ -2,6 +2,8 @@
     Source code for generating cosine transforms of Pml and Gml functions.
 */
 
+#include "cospml.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +11,10 @@
 
 #include <fftw3.h>
 
-#include "pmls.h"
-#include "util/primitive.h"
+#include "pml.h"
+#include "pmm.h"
+#include "util/chebyshev_nodes.h"
+#include "util/util.h"
 
 /*
     Utility functions for table management.

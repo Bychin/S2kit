@@ -52,8 +52,8 @@
 #include <fftw3.h>
 
 #include "FST_semi_memo.h"
-#include "cospmls.h"
-#include "makeweights.h"
+#include "legendre_polynomials/cospml.h"
+#include "legendre_transform/weights.h"
 
 #include "util/csecond.h"
 
