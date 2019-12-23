@@ -14,7 +14,6 @@
 
     Utility functions in this package:
     1) seanindex(m,l,bandwidth) - gives the position of the coefficient f-hat(m,l) in the one-row array.
-    2) TODO ComplexMult
 
     For descriptions on calling these functions, see the documentation preceding each function.
 */
@@ -155,25 +154,21 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
     double* rdataptr = rcoeffs;
     double* idataptr = icoeffs;
 
-    // TODO into two cycles?
-    for (int m = 0; m < bw; ++m) {
-        if (m < cutoff) { // semi-naive part
-            // real part
-            SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
-            // load real part of coefficients into output space
-            memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
-            rdataptr += bw - m;
+    for (int m = 0; m < cutoff; ++m) { // semi-naive part
+        // real part
+        SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
+        // load real part of coefficients into output space
+        memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
+        rdataptr += bw - m;
 
-            // imaginary part
-            SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
-            // load imaginary part of coefficients into output space
-            memcpy(idataptr, fltres, sizeof(double) * (bw - m));
-            idataptr += bw - m;
+        // imaginary part
+        SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
+        // load imaginary part of coefficients into output space
+        memcpy(idataptr, fltres, sizeof(double) * (bw - m));
+        idataptr += bw - m;
+    }
 
-            continue;
-        }
-
-        // naive part
+    for (int m = cutoff; m < bw; ++m) { // naive part
         // real part
         Naive_AnalysisX(rres + (m * size), bw, m, weights, fltres, seminaive_naive_table[m], scratchpad);
         memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
@@ -224,7 +219,6 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
                              weights, DCT_plan);
             // load real part of coefficients into output space
             if (m % 2) {
-                // TODO memcpy vs for-cycle
                 for (int i = 0; i < m - bw; ++i)
                     rdataptr[i] = -fltres[i];
             } else {
@@ -237,7 +231,6 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
                              weights, DCT_plan);
             // load imaginary part of coefficients into output space
             if (m % 2) {
-                // TODO memcpy vs for-cycle
                 for (int i = 0; i < m - bw; ++i)
                     idataptr[i] = -fltres[i];
             } else {
@@ -254,7 +247,6 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
                         scratchpad);
         // load real part of coefficients into output space
         if (m % 2) {
-            // TODO memcpy vs for-cycle
             for (int i = 0; i < m - bw; ++i)
                 rdataptr[i] = -fltres[i];
         } else {
@@ -267,7 +259,6 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
                         scratchpad);
         // load imaginary part of coefficients into output space
         if (m % 2) {
-            // TODO memcpy vs for-cycle
             for (int i = 0; i < m - bw; ++i)
                 idataptr[i] = -fltres[i];
         } else {
@@ -320,28 +311,24 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
     double* rdataptr = rcoeffs;
     double* idataptr = icoeffs;
 
-    // TODO into two cycles?
-    for (int m = 0; m < bw; ++m) {
-        if (m < cutoff) { // semi-naive part
-            // real part
-            InvSemiNaiveReduced(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m], sin_values,
-                                scratchpad, inv_DCT_plan);
+    for (int m = 0; m < cutoff; ++m) { // semi-naive part
+        // real part
+        InvSemiNaiveReduced(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m], sin_values,
+                            scratchpad, inv_DCT_plan);
 
-            // imaginary part
-            InvSemiNaiveReduced(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m], sin_values,
-                                scratchpad, inv_DCT_plan);
+        // imaginary part
+        InvSemiNaiveReduced(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m], sin_values,
+                            scratchpad, inv_DCT_plan);
 
-            // store normal, then tranpose before doing inverse fft
-            memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
-            memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
+        // store normal, then tranpose before doing inverse fft
+        memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
+        memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
 
-            rdataptr += bw - m;
-            idataptr += bw - m;
+        rdataptr += bw - m;
+        idataptr += bw - m;
+    }
 
-            continue;
-        }
-
-        // naive part
+    for (int m = cutoff; m < bw; ++m) { // naive part
         // real part
         Naive_SynthesizeX(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m]);
         // imaginary part
@@ -449,7 +436,6 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
   workspace needed is (12 * bw)
 
 */
-// TODO memset?
 void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, const int bw, double* cos_pml_table,
                    double* workspace, const int dataformat, fftw_plan* DCT_plan, double* weights) {
     int size = 2 * bw;
@@ -487,17 +473,16 @@ void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, con
 
 /*
     Multiplies harmonic coefficients of a function and a filter.
-  See convolution theorem of Driscoll and Healy for details.
+    See convolution theorem of Driscoll and Healy for details.
 
-  bw -> bandwidth of problem
-  size = 2*bw
+    bw - bandwidth of problem
 
-  datacoeffs should be output of an FST, filtercoeffs the
-  output of an FZT.  There should be (bw * bw) datacoeffs,
-  and bw filtercoeffs.
-  rres and ires should point to arrays of dimension bw * bw.
-
+    datacoeffs should be output of an FST, filtercoeffs the
+    output of an FZT.  There should be (bw * bw) datacoeffs,
+    and bw filtercoeffs.
+    rres and ires should point to arrays of dimension bw * bw.
 */
+// TODO move to utils (duplicates same func from FST_semi_fly.c)
 void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, double* ifiltercoeffs, double* rres,
                double* ires, const int bw) {
     double* rdptr = rdatacoeffs;

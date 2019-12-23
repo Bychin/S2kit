@@ -14,7 +14,6 @@
 
     Utility functions in this package:
     1) seanindex(m,l,bandwidth) - gives the position of the coefficient f-hat(m,l) in the one-row array.
-    2) TODO ComplexMult
 
     For descriptions on calling these functions, see the documentation preceding each function.
 */
@@ -129,28 +128,24 @@ void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs
     double* rdataptr = rcoeffs;
     double* idataptr = icoeffs;
 
-    // TODO into two cycles?
-    for (int m = 0; m < bw; ++m) {
-        if (m < cutoff) { // semi-naive part
-            // generate cosine series of pmls
-            CosPmlTableGen(bw, m, pmls, scratchpad);
+    for (int m = 0; m < cutoff; ++m) { // semi-naive part
+        // generate cosine series of pmls
+        CosPmlTableGen(bw, m, pmls, scratchpad);
 
-            // real part
-            SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, pmls, weights, DCT_plan);
-            // load real part of coefficients into output space
-            memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
-            rdataptr += bw - m;
+        // real part
+        SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, pmls, weights, DCT_plan);
+        // load real part of coefficients into output space
+        memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
+        rdataptr += bw - m;
 
-            // imaginary part
-            SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, pmls, weights, DCT_plan);
-            // load imaginary part of coefficients into output space
-            memcpy(idataptr, fltres, sizeof(double) * (bw - m));
-            idataptr += bw - m;
+        // imaginary part
+        SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, pmls, weights, DCT_plan);
+        // load imaginary part of coefficients into output space
+        memcpy(idataptr, fltres, sizeof(double) * (bw - m));
+        idataptr += bw - m;
+    }
 
-            continue;
-        }
-
-        // naive part
+    for (int m = cutoff; m < bw; ++m) { // naive part
         // generate pmls, note we are using CosPmls array
         PmlTableGen(bw, m, pmls, scratchpad);
 
@@ -207,7 +202,6 @@ void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs
             SemiNaiveReduced(rres + (m * size), bw, size - m, fltres, scratchpad, pmls, weights, DCT_plan);
             // load real part of coefficients into output space
             if (m % 2) {
-                // TODO memcpy vs for-cycle
                 for (int i = 0; i < m - bw; ++i)
                     rdataptr[i] = -fltres[i];
             } else {
@@ -291,34 +285,29 @@ void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* id
     double* rdataptr = rcoeffs;
     double* idataptr = icoeffs;
 
-    // TODO into two cycles?
-    for (int m = 0; m < bw; ++m) {
-        if (m < cutoff) { // semi-naive part
-            // generate cosine series of pmls
-            CosPmlTableGen(bw, m, pmls, scratchpad);
-            // take transpose
-            Transpose_CosPmlTableGen(bw, m, pmls, pmls + TableSize(m, bw));
+    for (int m = 0; m < cutoff; ++m) { // semi-naive part
+        // generate cosine series of pmls
+        CosPmlTableGen(bw, m, pmls, scratchpad);
+        // take transpose
+        Transpose_CosPmlTableGen(bw, m, pmls, pmls + TableSize(m, bw));
 
-            // real part
-            InvSemiNaiveReduced(rdataptr, bw, m, rinvfltres, pmls + TableSize(m, bw), sin_values, scratchpad,
-                                inv_DCT_plan);
+        // real part
+        InvSemiNaiveReduced(rdataptr, bw, m, rinvfltres, pmls + TableSize(m, bw), sin_values, scratchpad,
+                            inv_DCT_plan);
 
-            // imaginary part
-            InvSemiNaiveReduced(idataptr, bw, m, iminvfltres, pmls + TableSize(m, bw), sin_values, scratchpad,
-                                inv_DCT_plan);
+        // imaginary part
+        InvSemiNaiveReduced(idataptr, bw, m, iminvfltres, pmls + TableSize(m, bw), sin_values, scratchpad,
+                            inv_DCT_plan);
 
-            // store normal, then tranpose before doing inverse fft
-            memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
-            memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
+        // store normal, then tranpose before doing inverse fft
+        memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
+        memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
 
-            rdataptr += bw - m;
-            idataptr += bw - m;
+        rdataptr += bw - m;
+        idataptr += bw - m;
+    }
 
-            continue;
-        }
-
-        // naive part
-        
+    for (int m = cutoff; m < bw; ++m) { // naive part
         // generate pmls
         // Note we are using CosPmls array and don't have to transpose
         PmlTableGen(bw, m, pmls, scratchpad);
@@ -433,14 +422,13 @@ void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* id
 
    dataformat =0 -> samples are complex, =1 -> samples real
 */
-// TODO memset?
 void FZT_semi_fly(double* rdata, double* idata, double* rres, double* ires, const int bw, double* workspace,
                   const int dataformat, fftw_plan* DCT_plan, double* weights) {
     int size = 2 * bw;
 
     double* r0 = workspace;                    // needs (2 * bw)
-    double* i0 = r0 + size;                  // needs (2 * bw)
-    double* pmls = i0 + size;                // needs (2 * bw * bw)
+    double* i0 = r0 + size;                    // needs (2 * bw)
+    double* pmls = i0 + size;                  // needs (2 * bw * bw)
     double* scratchpad = pmls + (2 * bw * bw); // needs (4 * bw)
 
     double dsize = sqrt(2. * M_PI) / size;
@@ -473,13 +461,14 @@ void FZT_semi_fly(double* rdata, double* idata, double* rres, double* ires, cons
 
 /*
     Multiplies harmonic coefficients of a function and a filter.
-    See convolution theorem of Driscoll and Healy.
+    See convolution theorem of Driscoll and Healy for details.
+
+    bw - bandwidth of problem
 
     datacoeffs should be output of an FST, filtercoeffs the
-   output of an FZT.  There should be (bw * bw) datacoeffs,
-   and bw filtercoeffs.
-   rres and ires should point to arrays
-   of dimension bw * bw. size parameter is 2*bw
+    output of an FZT.  There should be (bw * bw) datacoeffs,
+    and bw filtercoeffs.
+    rres and ires should point to arrays of dimension bw * bw.
 */
 void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, double* ifiltercoeffs, double* rres,
                double* ires, const int bw) {
