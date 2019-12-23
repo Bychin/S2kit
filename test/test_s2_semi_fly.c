@@ -123,7 +123,8 @@ int main(int argc, char** argv) {
     double* relerror = (double*)malloc(sizeof(double) * loops);
     double* curmax = (double*)malloc(sizeof(double) * loops);
 
-    int cutoff = bw; // seminaive all orders
+    // TODO more tests with dataformat 0 and cutoff
+    int cutoff = (bw / 2) - 10; // seminaive all orders
 
     double fwd_time = 0.0;
     double inv_time = 0.0;
@@ -154,7 +155,7 @@ int main(int argc, char** argv) {
 
         double time_start = csecond();
         // inverse spherical transform
-        InvFST_semi_fly(rcoeffs, icoeffs, rdata, idata, bw, workspace, 1, cutoff, &inv_DCT_plan, &inv_FFT_plan);
+        InvFST_semi_fly(rcoeffs, icoeffs, rdata, idata, bw, workspace, 0, cutoff, &inv_DCT_plan, &inv_FFT_plan);
 
         double duration = csecond() - time_start;
         inv_time += duration;
@@ -162,7 +163,7 @@ int main(int argc, char** argv) {
 
         time_start = csecond();
         // forward spherical transform
-        FST_semi_fly(rdata, idata, rresult, iresult, bw, workspace, 1, cutoff, &DCT_plan, &FFT_plan, weights);
+        FST_semi_fly(rdata, idata, rresult, iresult, bw, workspace, 0, cutoff, &DCT_plan, &FFT_plan, weights);
 
         duration = csecond() - time_start;
         fwd_time += duration;

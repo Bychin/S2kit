@@ -102,11 +102,8 @@ int Spharmonic_TableSize(const int bw) {
 
     Also, the transpose is exactly the same size, obviously.
 */
-// TODO check bw > 512 (~750 ok?)
 int Reduced_SpharmonicTableSize(const int bw, const int m) {
-    if (m <= 512) {
-        return (((4 * m * m * m) + (6 * m * m) - (8 * m)) / 24) + m;
-    }
+    // TODO optimize? or just use Spharmonic_TableSize? (say no to economy)
 
     int sum = 0;
     for (int i = 0; i < m; ++i)
@@ -461,8 +458,7 @@ double** SemiNaive_Naive_Pml_Table(const int bw, const int m, double* resultspac
         seminaive_naive_table[i] = seminaive_naive_table[i - 1] + TableSize(i - 1, bw);
 
     if (m != 0) {
-        int lastspace = TableSize(m - 1, bw);
-        seminaive_naive_table[m] = seminaive_naive_table[m - 1] + lastspace;
+        seminaive_naive_table[m] = seminaive_naive_table[m - 1] + TableSize(m - 1, bw);
     }
 
     for (int i = m + 1; i < bw; ++i)

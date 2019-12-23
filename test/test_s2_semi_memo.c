@@ -67,7 +67,9 @@ int main(int argc, char** argv) {
     int loops = atoi(argv[2]);
 
     int size = 2 * bw;
-    int cutoff = bw; // seminaive all orders
+
+    // TODO more tests with dataformat 0 and cutoff
+    int cutoff = bw / 4; // seminaive all orders
 
     double* workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (16 * bw)));
     double* seminaive_naive_tablespace = (double*)malloc(
@@ -229,7 +231,7 @@ int main(int argc, char** argv) {
 
     double total_time = inv_time + fwd_time;
 
-    fprintf(stdout, "Total elapsed %s time :\t\t\t %.4e seconds.\n", timing_object, total_time);
+    fprintf(stdout, "Total elapsed %s time :\t\t %.4e seconds.\n", timing_object, total_time);
     fprintf(stdout, "Average %s forward per iteration:\t %.4e seconds.\n", timing_object, fwd_time / loops);
     fprintf(stdout, "Average %s inverse per iteration:\t %.4e seconds.\n", timing_object, inv_time / loops);
 

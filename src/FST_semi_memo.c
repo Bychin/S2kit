@@ -287,7 +287,6 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
 */
 // TODO try to use double** -> double*
-// TODO check memset
 void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw,
                       double** transpose_seminaive_naive_table, double* workspace, const int dataformat,
                       const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {

@@ -78,7 +78,7 @@ int seanindex(const int m, const int l, const int bw) {
   (10 * bw^2) + (21 * bw)
 
   cutoff -> what order to switch from semi-naive to naive
-            algorithm.
+            algorithm. // TODO add check that cutoff<bw?
 
 
    Output Ordering of coeffs f(m,l) is
@@ -192,38 +192,7 @@ void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs
         purposes of indexing the input data arrays. The "true"
         value of `m` as a parameter for Pml is `size-m` 
     */
-    // TODO into two cycles?
-    for (int m = bw + 1; m < size; ++m) {
-        if ((size - m) < cutoff) { // semi-naive part
-            // generate cosine series of pmls
-            CosPmlTableGen(bw, size - m, pmls, scratchpad);
-
-            // real part
-            SemiNaiveReduced(rres + (m * size), bw, size - m, fltres, scratchpad, pmls, weights, DCT_plan);
-            // load real part of coefficients into output space
-            if (m % 2) {
-                for (int i = 0; i < m - bw; ++i)
-                    rdataptr[i] = -fltres[i];
-            } else {
-                memcpy(rdataptr, fltres, sizeof(double) * (m - bw));
-            }
-            rdataptr += m - bw;
-
-            // imaginary part
-            SemiNaiveReduced(ires + (m * size), bw, size - m, fltres, scratchpad, pmls, weights, DCT_plan);
-            // load imaginary part of coefficients into output space
-            if (m % 2) {
-                for (int i = 0; i < m - bw; ++i)
-                    idataptr[i] = -fltres[i];
-            } else {
-                memcpy(idataptr, fltres, sizeof(double) * (m - bw));
-            }
-            idataptr += m - bw;
-
-            continue;
-        }
-
-        // naive part
+    for (int m = bw + 1; m <= size - cutoff; ++m) { // naive part
         // generate pmls, note we are using CosPmls array
         PmlTableGen(bw, size - m, pmls, scratchpad);
 
@@ -249,6 +218,33 @@ void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs
         }
         idataptr += m - bw;
     }
+
+    for (int m = size - cutoff + 1; m < size; ++m) { // semi-naive part
+        // generate cosine series of pmls
+        CosPmlTableGen(bw, size - m, pmls, scratchpad);
+
+        // real part
+        SemiNaiveReduced(rres + (m * size), bw, size - m, fltres, scratchpad, pmls, weights, DCT_plan);
+        // load real part of coefficients into output space
+        if (m % 2) {
+            for (int i = 0; i < m - bw; ++i)
+                rdataptr[i] = -fltres[i];
+        } else {
+            memcpy(rdataptr, fltres, sizeof(double) * (m - bw));
+        }
+        rdataptr += m - bw;
+
+        // imaginary part
+        SemiNaiveReduced(ires + (m * size), bw, size - m, fltres, scratchpad, pmls, weights, DCT_plan);
+        // load imaginary part of coefficients into output space
+        if (m % 2) {
+            for (int i = 0; i < m - bw; ++i)
+                idataptr[i] = -fltres[i];
+        } else {
+            memcpy(idataptr, fltres, sizeof(double) * (m - bw));
+        }
+        idataptr += m - bw;
+    }
 }
 
 /*
@@ -262,7 +258,6 @@ void FST_semi_fly(double* rdata, double* idata, double* rcoeffs, double* icoeffs
    workspace is (10 * bw^2) + (24 * bw)
     dataformat =0 -> samples are complex, =1 -> samples real
 */
-// TODO check memset
 void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw, double* workspace,
                      const int dataformat, const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {
     int size = 2 * bw;
@@ -337,43 +332,39 @@ void InvFST_semi_fly(double* rcoeffs, double* icoeffs, double* rdata, double* id
 
         so use that to get the rest of the coefficients
     */
+    // TODO swap if and for? (almost same 2nd part)
     if (dataformat == 0) { // complex data
-        // do negative m values
-        // TODO into two cycles?
-        for (int m = bw + 1; m < size; ++m) {
-            if ((size - m) < cutoff) {  // semi-naive part
-                // generate cosine series of pmls
-                CosPmlTableGen(bw, size - m, pmls, scratchpad);
-                // take transpose
-                Transpose_CosPmlTableGen(bw, size - m, pmls, pmls + TableSize(size - m, bw));
-
-                InvSemiNaiveReduced(rdataptr, bw, size - m, rinvfltres, pmls + TableSize(size - m, bw), sin_values,
-                                    scratchpad, inv_DCT_plan);
-                InvSemiNaiveReduced(idataptr, bw, size - m, iminvfltres, pmls + TableSize(size - m, bw), sin_values,
-                                    scratchpad, inv_DCT_plan);
-
-                // store normal, then tranpose before doing inverse fft
-                if (m % 2)
-                    for (int i = 0; i < size; ++i) {
-                        rinvfltres[i] *= -1.0;
-                        iminvfltres[i] *= -1.0;
-                    }
-
-                memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
-                memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
-
-                rdataptr += bw - (size - m);
-                idataptr += bw - (size - m);
-
-                continue;
-            }
-
-            // naive part
+        for (int m = bw + 1; m <= size - cutoff; ++m) { // naive part
             // Note we are using CosPmls array and don't have to transpose
             PmlTableGen(bw, size - m, pmls, scratchpad);
 
             Naive_SynthesizeX(rdataptr, bw, size - m, rinvfltres, pmls);
             Naive_SynthesizeX(idataptr, bw, size - m, iminvfltres, pmls);
+
+            // store normal, then tranpose before doing inverse fft
+            if (m % 2)
+                for (int i = 0; i < size; ++i) {
+                    rinvfltres[i] *= -1.0;
+                    iminvfltres[i] *= -1.0;
+                }
+
+            memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
+            memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
+
+            rdataptr += bw - (size - m);
+            idataptr += bw - (size - m);
+        }
+
+        for (int m = size - cutoff + 1; m < size; ++m) { // semi-naive part
+            // generate cosine series of pmls
+            CosPmlTableGen(bw, size - m, pmls, scratchpad);
+            // take transpose
+            Transpose_CosPmlTableGen(bw, size - m, pmls, pmls + TableSize(size - m, bw));
+
+            InvSemiNaiveReduced(rdataptr, bw, size - m, rinvfltres, pmls + TableSize(size - m, bw), sin_values,
+                                scratchpad, inv_DCT_plan);
+            InvSemiNaiveReduced(idataptr, bw, size - m, iminvfltres, pmls + TableSize(size - m, bw), sin_values,
+                                scratchpad, inv_DCT_plan);
 
             // store normal, then tranpose before doing inverse fft
             if (m % 2)

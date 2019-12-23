@@ -75,6 +75,7 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
     double* fcos = workspace;
     double* trans_tableptr = trans_cos_pml_table;
 
+    double coeff = 0.5 / sqrt(bw);
     /* 
         main loop - compute each value of fcos
 
@@ -98,22 +99,19 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
         double value = 0.;
         for (int j = 0; j < rowsize; ++j)
             value += assoc_offset[2 * j] * trans_tableptr[j];
-        fcos[i] = value;
+
+        fcos[i] = value * coeff; // scale coefficients prior to taking inverse DCT
 
         trans_tableptr += rowsize;
     }
+
+    // special coeff for the first one
+    fcos[0] /= (sqrt(size) * coeff);
 
     /*
         now we have the cosine series for the result,
         so now evaluate the cosine series at `2*bw` Chebyshev nodes
     */
-
-    // scale coefficients prior to taking inverse DCT
-    // TODO move part to upper for-cycle?
-    fcos[0] /= sqrt(size);
-    double coeff = 0.5 / sqrt(bw);
-    for (int i = 1; i < bw; ++i)
-        fcos[i] *= coeff;
 
     // take the inverse dct
     // Note that I am using the guru interface

@@ -51,9 +51,7 @@ void PmlTableGen(const int bw, const int m, double* storeplm, double* workspace)
     AcosOfChebyshevNodes(size, eval_args);
 
     // set initial values of first two Pmls
-    // TODO add memcpy
-    for (int i = 0; i < size; ++i)
-        prevprev[i] = 0.;
+    memset(prevprev, 0, sizeof(double) * size);
 
     if (!m)
         for (int i = 0; i < size; ++i)
