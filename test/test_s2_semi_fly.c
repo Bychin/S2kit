@@ -51,8 +51,9 @@
 #include <fftw3.h>
 
 #include "FST_semi_fly.h"
-#include "csecond.h"
 #include "makeweights.h"
+
+#include "util/csecond.h"
 
 int main(int argc, char** argv) {
     if (argc < 3) {

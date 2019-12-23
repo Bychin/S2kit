@@ -1,8 +1,6 @@
 /*
-    Some "primitive" functions that are used in cospmls.c
+    Some "primitive" functions
 */
-
-// TODO move to utils?
 
 #include "primitive.h"
 

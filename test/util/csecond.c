@@ -1,8 +1,6 @@
 /*
-    A function used for timing; provided by Mark Taylor.
+    Timing function, creator Mark Taylor.
 */
-
-// TODO: move to utils
 
 #include "csecond.h"
 
@@ -42,8 +40,6 @@ double csecond() {
 
     struct tms buf;
     clock_t rv = times(&buf);
-    // if (rv < 0)
-    //    fprintf(stderr, "csecond failed  %d \n",rv);
 #ifdef WALLCLOCK
     return ((double)(rv - rv0) / (double)DIVIDER);
 #else

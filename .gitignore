@@ -2,6 +2,7 @@
 .vscode/
 bin/
 dist/
+!dist/test.sh
 
 .clang-format
 *.o

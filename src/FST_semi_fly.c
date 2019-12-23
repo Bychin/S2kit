@@ -30,7 +30,7 @@
 #include "makeweights.h"
 #include "naive_synthesis.h"
 #include "pmls.h"
-#include "primitive.h"
+#include "util/primitive.h"
 #include "seminaive.h"
 
 // TODO (move to utils?)

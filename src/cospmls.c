@@ -10,7 +10,7 @@
 #include <fftw3.h>
 
 #include "pmls.h"
-#include "primitive.h"
+#include "util/primitive.h"
 
 /*
     Utility functions for table management.

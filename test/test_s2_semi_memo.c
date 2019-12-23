@@ -53,8 +53,9 @@
 
 #include "FST_semi_memo.h"
 #include "cospmls.h"
-#include "csecond.h"
 #include "makeweights.h"
+
+#include "util/csecond.h"
 
 int main(int argc, char** argv) {
     if (argc < 3) {

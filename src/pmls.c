@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "primitive.h"
+#include "util/primitive.h"
 
 /*
     Generates all of the Pmls for a specified value of `m`.
