@@ -24,11 +24,11 @@ echo "--- END OF MAKE ---"
 
 echo "--- EXECUTE TESTS ---"
 
-echo "--- EXECUTE test_naive 0 1024 100 ---"
-"$BIN"/test_naive 0 1024 100
+echo "--- EXECUTE test_DLT_naive 0 1024 100 ---"
+"$BIN"/test_DLT_naive 0 1024 100
 
-echo "--- EXECUTE test_semi 0 1024 100 ---"
-"$BIN"/test_semi 0 1024 100
+echo "--- EXECUTE test_DLT_semi 0 1024 100 ---"
+"$BIN"/test_DLT_semi 0 1024 100
 
 echo "--- EXECUTE test_s2_semi_fly 512 1 ---"
 "$BIN"/test_s2_semi_fly 512 1

@@ -1,10 +1,9 @@
 /*
     Contains utility functions:
 
-    1) ComplexMult()     - multiplies two complex numbers;
-    2) seanindex(m,l,bw) - gives the position of the coefficient f-hat(m,l) in the one-row array;
-    3) TransMult()       - multiplies harmonic coefficients using Driscoll-Healy result,
-                           dual of convolution in "time" domain.
+    1) IndexOfHarmonicCoeff(m,l,bw) - gives the position of the coefficient f-hat(m,l) in the one-row array;
+    2) TransMult()                  - multiplies harmonic coefficients using Driscoll-Healy result,
+                                      dual of convolution in "time" domain.
 */
 
 #include "util.h"
@@ -26,8 +25,10 @@ void inline ComplexMult(const double x, const double y, const double u, const do
     (`l` = degree, `m` = order, and `abs(m)` <= `l`)
 
     f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
+
+    Previous name was `seanindex`
 */
-int seanindex(const int m, const int l, const int bw) {
+int IndexOfHarmonicCoeff(const int m, const int l, const int bw) {
     int bigL = bw - 1;
 
     if (m >= 0)

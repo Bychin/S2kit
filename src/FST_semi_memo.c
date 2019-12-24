@@ -5,15 +5,10 @@
     Assumes that all precomputed data is already in memory, not to be read from disk.
 
     The primary functions in this package are:
-    // TODO rename
-    SHTSemiMemo()
-    InvSHTSemiMemo()
-    ZHTSemiMemo()
-    ConvOn2SphereSemiMemo()
-    1) FST_semi_memo()         - computes the spherical harmonic transform;
-    2) InvFST_semi_memo()      - computes the inverse spherical harmonic transform;
-    3) FZT_semi_memo()         - computes the zonal harmonic transform;
-    4) Conv2Sphere_semi_memo() - convolves two functins defined on the 2-sphere, using seminaive transform.
+    1) FSTSemiMemo()         - computes the spherical harmonic transform;
+    2) InvFSTSemiMemo()      - computes the inverse spherical harmonic transform;
+    3) FZTSemiMemo()         - computes the zonal harmonic transform;
+    4) ConvOn2SphereSemiMemo() - convolves two functins defined on the 2-sphere, using seminaive transform.
 
     For descriptions on calling these functions, see the documentation preceding each function.
 */
@@ -68,9 +63,6 @@
    cutoff -> what order to switch from semi-naive to naive
              algorithm.
 
-   dataformat =0 -> samples are complex, =1 -> samples real
-
-
    Output Ordering of coeffs f(m,l) is
    f(0,0) f(0,1) f(0,2) ... f(0,bw-1)
           f(1,1) f(1,2) ... f(1,bw-1)
@@ -92,10 +84,9 @@
    more than necessary.
 
 */
-// TODO: dataformat to enum?
-void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeffs, const int bw,
-                   double** seminaive_naive_table, double* workspace, const int dataformat, const int cutoff,
-                   fftw_plan* DCT_plan, fftw_plan* FFT_plan, double* weights) {
+void FSTSemiMemo(double* rdata, double* idata, double* rcoeffs, double* icoeffs, const int bw,
+                 double** seminaive_naive_table, double* workspace, DataFormat data_format,
+                 const int cutoff, fftw_plan* DCT_plan, fftw_plan* FFT_plan, double* weights) {
     int size = 2 * bw;
 
     // total workspace is (8 * bw^2) + (7 * bw)
@@ -130,13 +121,13 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
     for (int m = 0; m < cutoff; ++m) { // semi-naive part
         // real part
-        SemiNaiveReduced(rres + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
+        DLTSemi(rres + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
         // load real part of coefficients into output space
         memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
         rdataptr += bw - m;
 
         // imaginary part
-        SemiNaiveReduced(ires + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
+        DLTSemi(ires + (m * size), bw, m, fltres, scratchpad, seminaive_naive_table[m], weights, DCT_plan);
         // load imaginary part of coefficients into output space
         memcpy(idataptr, fltres, sizeof(double) * (bw - m));
         idataptr += bw - m;
@@ -144,12 +135,12 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
     for (int m = cutoff; m < bw; ++m) { // naive part
         // real part
-        Naive_AnalysisX(rres + (m * size), bw, m, weights, fltres, seminaive_naive_table[m], scratchpad);
+        DLTNaive(rres + (m * size), bw, m, weights, fltres, seminaive_naive_table[m], scratchpad);
         memcpy(rdataptr, fltres, sizeof(double) * (bw - m));
         rdataptr += bw - m;
 
         // imaginary part
-        Naive_AnalysisX(ires + (m * size), bw, m, weights, fltres, seminaive_naive_table[m], scratchpad);
+        DLTNaive(ires + (m * size), bw, m, weights, fltres, seminaive_naive_table[m], scratchpad);
         memcpy(idataptr, fltres, sizeof(double) * (bw - m));
         idataptr += bw - m;
     }
@@ -163,13 +154,13 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
 
         so use that to get the rest of the coefficients
     */
-    if (dataformat == 1) { // real data
+    if (data_format == REAL) {
         double coeff = 1.;
         for (int i = 1; i < bw; ++i) {
             coeff *= -1.;
             for (int j = i; j < bw; ++j) {
-                int index0 = seanindex(i, j, bw);
-                int index1 = seanindex(-i, j, bw);
+                int index0 = IndexOfHarmonicCoeff(i, j, bw);
+                int index1 = IndexOfHarmonicCoeff(-i, j, bw);
 
                 rcoeffs[index1] = coeff * rcoeffs[index0];
                 icoeffs[index1] = -coeff * icoeffs[index0];
@@ -189,8 +180,8 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
     for (int m = bw + 1; m < size; ++m) {
         if ((size - m) < cutoff) { // semi-naive part
             // real part
-            SemiNaiveReduced(rres + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
-                             weights, DCT_plan);
+            DLTSemi(rres + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
+                    weights, DCT_plan);
             // load real part of coefficients into output space
             if (m % 2) {
                 for (int i = 0; i < m - bw; ++i)
@@ -201,8 +192,8 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
             rdataptr += m - bw;
 
             // imaginary part
-            SemiNaiveReduced(ires + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
-                             weights, DCT_plan);
+            DLTSemi(ires + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
+                    weights, DCT_plan);
             // load imaginary part of coefficients into output space
             if (m % 2) {
                 for (int i = 0; i < m - bw; ++i)
@@ -217,7 +208,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
         
         // naive part
         // real part
-        Naive_AnalysisX(rres + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
+        DLTNaive(rres + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
                         scratchpad);
         // load real part of coefficients into output space
         if (m % 2) {
@@ -229,7 +220,7 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
         rdataptr += m - bw;
 
         // imaginary part
-        Naive_AnalysisX(ires + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
+        DLTNaive(ires + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
                         scratchpad);
         // load imaginary part of coefficients into output space
         if (m % 2) {
@@ -256,14 +247,11 @@ void FST_semi_memo(double* rdata, double* idata, double* rcoeffs, double* icoeff
    result of a call to Transpose_Spharmonic_Pml_Table()
 
    workspace is (8 * bw^2) + (10 * bw)
-
-   dataformat =0 -> samples are complex, =1 -> samples real
-
 */
 // TODO try to use double** -> double*
-void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw,
-                      double** transpose_seminaive_naive_table, double* workspace, const int dataformat,
-                      const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {
+void InvFSTSemiMemo(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw,
+                    double** transpose_seminaive_naive_table, double* workspace, DataFormat data_format,
+                    const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {
     int size = 2 * bw;
 
     // total workspace = (8 * bw^2) + (10 * bw)
@@ -286,12 +274,11 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
     for (int m = 0; m < cutoff; ++m) { // semi-naive part
         // real part
-        InvSemiNaiveReduced(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m], sin_values,
-                            scratchpad, inv_DCT_plan);
-
+        InvDLTSemi(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m], sin_values, scratchpad,
+                   inv_DCT_plan);
         // imaginary part
-        InvSemiNaiveReduced(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m], sin_values,
-                            scratchpad, inv_DCT_plan);
+        InvDLTSemi(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m], sin_values, scratchpad,
+                   inv_DCT_plan);
 
         // store normal, then tranpose before doing inverse fft
         memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
@@ -303,9 +290,9 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
     for (int m = cutoff; m < bw; ++m) { // naive part
         // real part
-        Naive_SynthesizeX(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m]);
+        InvDLTNaive(rdataptr, bw, m, rinvfltres, transpose_seminaive_naive_table[m]);
         // imaginary part
-        Naive_SynthesizeX(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m]);
+        InvDLTNaive(idataptr, bw, m, iminvfltres, transpose_seminaive_naive_table[m]);
 
         // store normal, then tranpose before doing inverse fft
         memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
@@ -327,15 +314,15 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
 
         so use that to get the rest of the coefficients
     */
-    if (dataformat == 0) { // complex data
+    if (data_format == COMPLEX) {
         // do negative m values
         // TODO into two cycles?
         for (int m = bw + 1; m < size; ++m) {
             if ((size - m) < cutoff) { // semi-naive part
-                InvSemiNaiveReduced(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m],
-                                    sin_values, scratchpad, inv_DCT_plan);
-                InvSemiNaiveReduced(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m],
-                                    sin_values, scratchpad, inv_DCT_plan);
+                InvDLTSemi(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m],
+                           sin_values, scratchpad, inv_DCT_plan);
+                InvDLTSemi(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m],
+                           sin_values, scratchpad, inv_DCT_plan);
 
                 // store normal, then tranpose before doing inverse fft
                 if (m % 2)
@@ -354,8 +341,8 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
             }
 
             // naive part
-            Naive_SynthesizeX(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m]);
-            Naive_SynthesizeX(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m]);
+            InvDLTNaive(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m]);
+            InvDLTNaive(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m]);
 
             // store normal, then tranpose before doing inverse fft
             if (m % 2)
@@ -401,16 +388,14 @@ void InvFST_semi_memo(double* rcoeffs, double* icoeffs, double* rdata, double* i
   rres and ires should be pointers to double arrays of size bw.
 
   cos_pml_table contains Legendre coefficients of P(0,l) functions
-  and is result of CosPmlTableGen for m = 0;
+  and is result of GenerateCosPmlTable for m = 0;
   FZT_semi only computes spherical harmonics for m=0.
-
-  dataformat =0 -> samples are complex, =1 -> samples real
 
   workspace needed is (12 * bw)
 
 */
-void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, const int bw, double* cos_pml_table,
-                   double* workspace, const int dataformat, fftw_plan* DCT_plan, double* weights) {
+void FZTSemiMemo(double* rdata, double* idata, double* rres, double* ires, const int bw, double* cos_pml_table,
+                 double* workspace, const DataFormat data_format, fftw_plan* DCT_plan, double* weights) {
     int size = 2 * bw;
 
     double* r0 = workspace;         // needs (2 * bw)
@@ -436,10 +421,10 @@ void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, con
     }
 
     // real part
-    SemiNaiveReduced(r0, bw, 0, rres, scratchpad, cos_pml_table, weights, DCT_plan);
+    DLTSemi(r0, bw, 0, rres, scratchpad, cos_pml_table, weights, DCT_plan);
 
-    if (dataformat == 0) // if data is complex, do imaginary part
-        SemiNaiveReduced(i0, bw, 0, ires, scratchpad, cos_pml_table, weights, DCT_plan);
+    if (data_format == COMPLEX) // if data is complex, do imaginary part
+        DLTSemi(i0, bw, 0, ires, scratchpad, cos_pml_table, weights, DCT_plan);
     else // otherwise set coefficients to zero
         memset(ires, 0, sizeof(double) * size);
 }
@@ -491,7 +476,7 @@ void FZT_semi_memo(double* rdata, double* idata, double* rres, double* ires, con
    2 * legendre_size  +
    12 * (bw*bw) + 12*bw ;
 */
-void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double* ifilter, double* rres, double* ires,
+void ConvOn2SphereSemiMemo(double* rdata, double* idata, double* rfilter, double* ifilter, double* rres, double* ires,
                            const int bw, double* workspace) {
     int size = 2 * bw;
     int cutoff = bw; // TODO move to args?
@@ -509,7 +494,7 @@ void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double
     double* scratchpad = filtires + bw;                                // needs (8 * bw^2) + (10 * bw)
 
     double* weights = (double*)malloc(sizeof(double) * 4 * bw);
-    makeweights(bw, weights);
+    GenerateWeightsForDLT(bw, weights);
 
     // Make DCT plans. Note that I will be using the GURU interface to execute these plans within the routines
     fftw_plan DCT_plan = fftw_plan_r2r_1d(size, weights, rdata, FFTW_REDFT10, FFTW_ESTIMATE);
@@ -553,13 +538,13 @@ void Conv2Sphere_semi_memo(double* rdata, double* idata, double* rfilter, double
     double** transpose_spharmonic_pml_table =
         Transpose_Spharmonic_Pml_Table(spharmonic_pml_table, bw, transpose_spharmonic_result_space);
 
-    FST_semi_memo(rdata, idata, frres, fires, bw, spharmonic_pml_table, scratchpad, 1, bw, &DCT_plan, &FFT_plan, weights);
-    FZT_semi_memo(rfilter, ifilter, filtrres, filtires, bw, spharmonic_pml_table[0], scratchpad, 1, &DCT_plan, weights);
+    FSTSemiMemo(rdata, idata, frres, fires, bw, spharmonic_pml_table, scratchpad, 1, bw, &DCT_plan, &FFT_plan, weights);
+    FZTSemiMemo(rfilter, ifilter, filtrres, filtires, bw, spharmonic_pml_table[0], scratchpad, 1, &DCT_plan, weights);
 
     TransMult(frres, fires, filtrres, filtires, trres, tires, bw);
 
-    InvFST_semi_memo(trres, tires, rres, ires, bw, transpose_spharmonic_pml_table, scratchpad, 1, bw, &inv_DCT_plan,
-                     &inv_FFT_plan);
+    InvFSTSemiMemo(trres, tires, rres, ires, bw, transpose_spharmonic_pml_table, scratchpad, 1, bw, &inv_DCT_plan,
+                   &inv_FFT_plan);
 
     free(weights);
     free(spharmonic_pml_table);

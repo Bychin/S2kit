@@ -26,8 +26,8 @@
             ...
             E.g. l = 2  m = 1  2.3 + 6 I.
 
-    The default output format is "code" order. To help you out, the function `seanindex(m, l, bw)`
-    defined in FST_semi_memo.c, returns the array index of the coefficient f_{l,m}.
+    The default output format is "code" order. To help you out, the function `IndexOfHarmonicCoeff(m, l, bw)`
+    defined in src/util/util.c, returns the array index of the coefficient f_{l,m}.
 
     The format of the input sample file will be an interleaved real/imaginary parts of the function samples
     arranged in "latitude-major" format, i.e. the function will be sampled in this order:
@@ -57,6 +57,7 @@
 #include "FST_semi_memo.h"
 #include "legendre_polynomials/cospml.h"
 #include "legendre_transform/weights.h"
+#include "util/util.h"
 
 #include "util/csecond.h"
 
@@ -71,6 +72,7 @@ int main(int argc, char** argv) {
 
     int size = 2 * bw;
     int cutoff = bw; // seminaive all orders
+    DataFormat data_format = COMPLEX;
 
     double* workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (7 * bw)));
     double* seminaive_naive_tablespace = (double*)malloc(
@@ -104,7 +106,7 @@ int main(int argc, char** argv) {
     fftw_plan FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
                                                   workspace + (4 * bw * bw), FFTW_ESTIMATE);
 
-    makeweights(bw, weights);
+    GenerateWeightsForDLT(bw, weights);
 
     // read samples
     FILE* fp = fopen(argv[1], "r");
@@ -119,8 +121,8 @@ int main(int argc, char** argv) {
 
     double time_start = csecond();
     // forward spherical transform
-    FST_semi_memo(rdata, idata, rcoeffs, icoeffs, bw, seminaive_naive_table, workspace, 0, cutoff, &DCT_plan, &FFT_plan,
-                  weights);
+    FSTSemiMemo(rdata, idata, rcoeffs, icoeffs, bw, seminaive_naive_table, workspace, data_format, cutoff, &DCT_plan,
+                &FFT_plan, weights);
 
     fprintf(stdout, "forward time \t = %.4e\n", csecond() - time_start);
     fprintf(stdout, "about to write out coefficients\n");
@@ -137,7 +139,7 @@ int main(int argc, char** argv) {
     else
         for (int l = 0; l < bw; ++l)
             for (int m = -l; m < l + 1; ++m) {
-                int index = seanindex(m, l, bw);
+                int index = IndexOfHarmonicCoeff(m, l, bw);
                 fprintf(fp, "l = %d\t m = %d\t %.15f + %.15f I\n", l, m, rcoeffs[index], icoeffs[index]);
             }
     fclose(fp);

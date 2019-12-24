@@ -20,13 +20,13 @@
 
     bw        - bandwidth;
     m         - order;
-    storeplm  - array of size 2*bw*(bw-m);
-    workspace - array of size 16*bw // TODO add size checkers?
+    pml_table - array of size 2*bw*(bw-m);
+    workspace - array of size 16*bw
 
     P(m,l,j) respresents the associated Legendre function P_l^m evaluated at the j-th Chebyshev point
     (for the bandwidth `bw`) cos((2 * j + 1) * PI / (2 * bw)).
 
-    The array is placed in storeplm as follows:
+    The array is placed in pml_table as follows:
     P(m,m,0)      P(m,m,1)    ...  P(m,m,2*bw-1)
     P(m,m+1,0)    P(m,m+1,1)  ...  P(m,m+1,2*bw-1)
     P(m,m+2,0)    P(m,m+2,1)  ...  P(m,m+2,2*bw-1)
@@ -36,7 +36,7 @@
     This array will eventually be used by the naive transform algorithm.
     This function will precompute the arrays necessary for the algorithm.
 */
-void PmlTableGen(const int bw, const int m, double* storeplm, double* workspace) {
+void GeneratePmlTable(const int bw, const int m, double* pml_table, double* workspace) {
     int size = 2 * bw;
 
     double* prevprev = workspace;
@@ -61,7 +61,7 @@ void PmlTableGen(const int bw, const int m, double* storeplm, double* workspace)
     else
         Pmm_L2(m, eval_args, size, prev);
 
-    memcpy(storeplm, prev, sizeof(double) * size);
+    memcpy(pml_table, prev, sizeof(double) * size);
 
     for (int i = 0; i < bw - m - 1; ++i) {
         vec_mul(L2_cn(m, m + i), prevprev, temp1, size);
@@ -69,8 +69,8 @@ void PmlTableGen(const int bw, const int m, double* storeplm, double* workspace)
         vec_mul(L2_an(m, m + i), temp2, temp3, size);
         vec_add(temp3, temp1, temp4, size); // temp4 now contains P(m,m+i+1)
 
-        storeplm += size;
-        memcpy(storeplm, temp4, sizeof(double) * size);
+        pml_table += size;
+        memcpy(pml_table, temp4, sizeof(double) * size);
         memcpy(prevprev, prev, sizeof(double) * size);
         memcpy(prev, temp4, sizeof(double) * size);
     }

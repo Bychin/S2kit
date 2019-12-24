@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
     double* iresult = (double*)malloc(sizeof(double) * size * size);
     double* workspace = (double*)malloc(sizeof(double) * (2 * legendreSize + 12 * bw * bw + 12 * bw));
 
-    fprintf(stdout, "Calling Conv2Sphere_semi_memo()\n");
-    Conv2Sphere_semi_memo(rsignal, isignal, rfilter, ifilter, rresult, iresult, bw, workspace);
+    fprintf(stdout, "Calling ConvOn2SphereSemiMemo()\n");
+    ConvOn2SphereSemiMemo(rsignal, isignal, rfilter, ifilter, rresult, iresult, bw, workspace);
 
     // convolving real functions results in real output,
     // so no need to write the imaginary array

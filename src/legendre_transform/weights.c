@@ -21,14 +21,13 @@
 #include <math.h>
 
 /*
-    Makes weights for both even *and* odd order Legendre transforms for a given bandwidth bw.
+    Generates weights for both even *and* odd order Legendre transforms for a given bandwidth bw.
 
     bw      - bandwidth of transform;
     weights - pointer to double array of length `4*bw`, this array will contain the even and odd weights,
         even weights start at `weights[0]`, and odd weights start at `weights[2*bw]`
 */
-// TODO rename GenerateWeightsForDLT()
-void makeweights(const int bw, double* weights) {
+void GenerateWeightsForDLT(const int bw, double* weights) {
     double coeff = M_PI / (4. * bw);
 
     for (int i = 0; i < 2 * bw; ++i) {

@@ -3,14 +3,16 @@
 
 #include <fftw3.h>
 
-void FST_semi_memo(double*, double*, double*, double*, const int, double**, double*, const int, const int,
+#include "util/util.h"
+
+void FSTSemiMemo(double*, double*, double*, double*, const int, double**, double*, DataFormat, const int,
                    fftw_plan*, fftw_plan*, double*);
 
-void InvFST_semi_memo(double*, double*, double*, double*, const int, double**, double*, const int, const int,
+void InvFSTSemiMemo(double*, double*, double*, double*, const int, double**, double*, DataFormat, const int,
                       fftw_plan*, fftw_plan*);
 
-void FZT_semi_memo(double*, double*, double*, double*, const int, double*, double*, const int, fftw_plan*, double*);
+void FZTSemiMemo(double*, double*, double*, double*, const int, double*, double*, DataFormat, fftw_plan*, double*);
 
-void Conv2Sphere_semi_memo(double*, double*, double*, double*, double*, double*, const int, double*);
+void ConvOn2SphereSemiMemo(double*, double*, double*, double*, double*, double*, const int, double*);
 
 #endif // _FST_SEMI_MEMO_H

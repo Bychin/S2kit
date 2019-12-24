@@ -13,13 +13,13 @@ int Reduced_Naive_TableSize(const int, const int);
 
 int TableOffset(int, int);
 
-void CosPmlTableGen(const int, const int, double*, double*);
+void GenerateCosPmlTable(const int, const int, double*, double*);
 
 int RowSize(const int, const int);
 
 int Transpose_RowSize(const int, const int, const int);
 
-void Transpose_CosPmlTableGen(const int, const int, double*, double*);
+void TransposeCosPmlTable(const int, const int, double*, double*);
 
 double** Spharmonic_Pml_Table(const int, double*, double*);
 

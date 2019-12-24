@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
     double* iresult = (double*)malloc(sizeof(double) * size * size);
     double* workspace = (double*)malloc(sizeof(double) * (14 * bw * bw + 26 * bw));
 
-    fprintf(stdout, "Calling Conv2Sphere_semi_fly()\n");
-    Conv2Sphere_semi_fly(rsignal, isignal, rfilter, ifilter, rresult, iresult, bw, workspace);
+    fprintf(stdout, "Calling ConvOn2SphereSemiFly()\n");
+    ConvOn2SphereSemiFly(rsignal, isignal, rfilter, ifilter, rresult, iresult, bw, workspace);
 
     // convolving real functions results in real output,
     // so no need to write the imaginary array

@@ -1,10 +1,13 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-void inline ComplexMult(const double, const double, const double, const double, double*, double*);
+// DataFormat is used in FST functions to determine samples' data format.
+typedef enum {
+    COMPLEX = 0,
+    REAL
+} DataFormat; 
 
-// TODO rename
-int seanindex(const int, const int, const int);
+int IndexOfHarmonicCoeff(const int, const int, const int);
 
 void TransMult(double*, double*, double*, double*, double*, double*, const int);
 

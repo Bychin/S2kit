@@ -1,8 +1,8 @@
 CC = gcc
 
-FFTWDIR = /usr/local
-FFTWINC = -I$(FFTWDIR)/include
-FFTWLIB = -L$(FFTWDIR)/lib -lfftw3
+FFTW_DIR = /usr/local
+FFTW_INC = -I$(FFTW_DIR)/include
+FFTW_LIB = -L$(FFTW_DIR)/lib -lfftw3
 
 SRC_DIR = src
 SRC_INC = -I$(SRC_DIR)/
@@ -13,29 +13,29 @@ BIN_DIR = bin
 
 # define WALLCLOCK on the CFLAGS line for walltime instead of cpu time (default)
 # -U__STRICT_ANSI__ - math constants (e.g. M_PI) for GCC
-CFLAGS = -O3 ${FFTWINC} ${SRC_INC} -std=c11 -m64 -fPIC -U__STRICT_ANSI__
+CFLAGS = -O3 $(FFTW_INC) $(SRC_INC) -std=c11 -m64 -fPIC -U__STRICT_ANSI__
 
 LDFLAGS = -lm -m64 -fPIC
 
-# naive
+# naive Legendre transform
 # TODO check src
-NAIVESRC = chebyshev_nodes.c pmm.c l2_norms.c vector_funcs.c pml.c naive.c weights.c csecond.c
-NAIVEOBJ = $(addsuffix .o,$(basename $(NAIVESRC)))
+DLT_NAIVE_SRC = chebyshev_nodes.c pmm.c l2_norms.c vector_funcs.c pml.c naive.c weights.c csecond.c
+DLT_NAIVE_OBJ = $(addsuffix .o,$(basename $(DLT_NAIVE_SRC)))
 
-# semi-naive
-SEMISRC = chebyshev_nodes.c pmm.c pml.c cospml.c seminaive.c csecond.c l2_norms.c vector_funcs.c weights.c
-SEMIOBJ = $(addsuffix .o,$(basename $(SEMISRC)))
+# semi-naive Legendre transform
+DLT_SEMI_SRC = chebyshev_nodes.c pmm.c pml.c cospml.c seminaive.c csecond.c l2_norms.c vector_funcs.c weights.c
+DLT_SEMI_OBJ = $(addsuffix .o,$(basename $(DLT_SEMI_SRC)))
 
 # semi-naive spherical transform and convolution
-FSTSEMISRC = $(SEMISRC) naive.c util.c
-FSTSEMIOBJ = $(SEMIOBJ) naive.o util.o
-FSTSEMIOBJFLY  = $(FSTSEMIOBJ) FST_semi_fly.o
-FSTSEMIOBJMEMO = $(FSTSEMIOBJ) FST_semi_memo.o
+FST_SEMI_SRC = $(DLT_SEMI_SRC) naive.c util.c
+FST_SEMI_OBJ = $(DLT_SEMI_OBJ) naive.o util.o
+FST_SEMI_OBJ_FLY  = $(FST_SEMI_OBJ) FST_semi_fly.o
+FST_SEMI_OBJ_MEMO = $(FST_SEMI_OBJ) FST_semi_memo.o
 
-CONVSEMISRC = $(FSTSEMISRC)
-CONVSEMIOBJ = $(FSTSEMIOBJ)
-CONVSEMIOBJFLY  = $(CONVSEMIOBJ) FST_semi_fly.o
-CONVSEMIOBJMEMO = $(CONVSEMIOBJ) FST_semi_memo.o
+CONV_SEMI_SRC = $(FST_SEMI_SRC)
+CONV_SEMI_OBJ = $(FST_SEMI_OBJ)
+CONV_SEMI_OBJ_FLY  = $(CONV_SEMI_OBJ) FST_semi_fly.o
+CONV_SEMI_OBJ_MEMO = $(CONV_SEMI_OBJ) FST_semi_memo.o
 
 
 configure:
@@ -51,8 +51,8 @@ all:
 legendre:
 	make \
 	configure \
-	test_naive \
-	test_semi
+	test_DLT_naive \
+	test_DLT_semi
 
 sphere:
 	make \
@@ -71,37 +71,37 @@ clean:
 
 # make definitions for the individual executables
 
-test_naive: $(NAIVEOBJ) test_naive.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(NAIVEOBJ)) $(BUILD_DIR)/test_naive.o \
-	$(LDFLAGS) -o $(BIN_DIR)/test_naive
+test_DLT_naive: $(DLT_NAIVE_OBJ) test_DLT_naive.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(DLT_NAIVE_OBJ)) $(BUILD_DIR)/test_DLT_naive.o \
+	$(LDFLAGS) -o $(BIN_DIR)/test_DLT_naive
 
-test_semi: $(SEMIOBJ) test_semi.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(SEMIOBJ)) $(BUILD_DIR)/test_semi.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_semi
+test_DLT_semi: $(DLT_SEMI_OBJ) test_DLT_semi.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(DLT_SEMI_OBJ)) $(BUILD_DIR)/test_DLT_semi.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_DLT_semi
 
-test_s2_semi_memo: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FSTSEMIOBJMEMO)) $(BUILD_DIR)/test_s2_semi_memo.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_memo
+test_s2_semi_memo: $(FST_SEMI_OBJ) FST_semi_memo.o test_s2_semi_memo.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FST_SEMI_OBJ_MEMO)) $(BUILD_DIR)/test_s2_semi_memo.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_memo
 
-test_s2_semi_memo_fwd: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_fwd.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FSTSEMIOBJMEMO)) $(BUILD_DIR)/test_s2_semi_memo_fwd.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_memo_fwd
+test_s2_semi_memo_fwd: $(FST_SEMI_OBJ) FST_semi_memo.o test_s2_semi_memo_fwd.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FST_SEMI_OBJ_MEMO)) $(BUILD_DIR)/test_s2_semi_memo_fwd.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_memo_fwd
 
-test_s2_semi_memo_inv: $(FSTSEMIOBJ) FST_semi_memo.o test_s2_semi_memo_inv.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FSTSEMIOBJMEMO)) $(BUILD_DIR)/test_s2_semi_memo_inv.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_memo_inv
+test_s2_semi_memo_inv: $(FST_SEMI_OBJ) FST_semi_memo.o test_s2_semi_memo_inv.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FST_SEMI_OBJ_MEMO)) $(BUILD_DIR)/test_s2_semi_memo_inv.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_memo_inv
 
-test_s2_semi_fly: $(FSTSEMIOBJ) FST_semi_fly.o test_s2_semi_fly.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FSTSEMIOBJFLY)) $(BUILD_DIR)/test_s2_semi_fly.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_fly
+test_s2_semi_fly: $(FST_SEMI_OBJ) FST_semi_fly.o test_s2_semi_fly.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(FST_SEMI_OBJ_FLY)) $(BUILD_DIR)/test_s2_semi_fly.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_s2_semi_fly
 
-test_conv_semi_memo: $(CONVSEMIOBJ) FST_semi_memo.o test_conv_semi_memo.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(CONVSEMIOBJMEMO)) $(BUILD_DIR)/test_conv_semi_memo.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_conv_semi_memo
+test_conv_semi_memo: $(CONV_SEMI_OBJ) FST_semi_memo.o test_conv_semi_memo.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(CONV_SEMI_OBJ_MEMO)) $(BUILD_DIR)/test_conv_semi_memo.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_conv_semi_memo
 
-test_conv_semi_fly: $(CONVSEMIOBJ) FST_semi_fly.o test_conv_semi_fly.o
-	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(CONVSEMIOBJFLY)) $(BUILD_DIR)/test_conv_semi_fly.o \
-	${FFTWLIB} $(LDFLAGS) -o $(BIN_DIR)/test_conv_semi_fly
+test_conv_semi_fly: $(CONV_SEMI_OBJ) FST_semi_fly.o test_conv_semi_fly.o
+	$(CC) $(CFLAGS) $(addprefix $(BUILD_DIR)/,$(CONV_SEMI_OBJ_FLY)) $(BUILD_DIR)/test_conv_semi_fly.o \
+	$(FFTW_LIB) $(LDFLAGS) -o $(BIN_DIR)/test_conv_semi_fly
 
 
 # explicit rule for every file to be compiled in BUILD_DIR
@@ -151,8 +151,11 @@ test_conv_semi_fly.o:
 test_conv_semi_memo.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_conv_semi_memo.o $(TEST_DIR)/test_conv_semi_memo.c
 
-test_naive.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_naive.o $(TEST_DIR)/test_naive.c
+test_DLT_naive.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_DLT_naive.o $(TEST_DIR)/test_DLT_naive.c
+
+test_DLT_semi.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_DLT_semi.o $(TEST_DIR)/test_DLT_semi.c
 
 test_s2_semi_fly.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_s2_semi_fly.o $(TEST_DIR)/test_s2_semi_fly.c
@@ -165,6 +168,3 @@ test_s2_semi_memo_fwd.o:
 
 test_s2_semi_memo_inv.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_s2_semi_memo_inv.o $(TEST_DIR)/test_s2_semi_memo_inv.c
-
-test_semi.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/test_semi.o $(TEST_DIR)/test_semi.c

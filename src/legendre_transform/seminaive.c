@@ -15,7 +15,7 @@
 
 #include "legendre_polynomials/cospml.h"
 
-/* 
+/*
     Computes the inverse Legendre transform using the transposed seminaive algorithm.
     Note that because the Legendre transform is orthogonal, the inverse can be
     computed by transposing the matrix formulation of the problem.
@@ -51,22 +51,21 @@
    trans_cos_pml_table - double pointer to array representing
                          the linearized form of trans(P) above.
                          See cospml.{h,c} for a description
-                         of the function `Transpose_CosPmlTableGen()`
+                         of the function `TransposeCosPmlTable()`
                          which generates this array;
    sin_values - when `m` is odd, need to factor in the sin(x) that
                 is factored out of the generation of the values
                 in trans(P);
    workspace - a double array of size `2*bw` -> temp space involving
                intermediate array;
-   fplan - pointer to `fftw_plan` with input array being fcos
+   plan - pointer to `fftw_plan` with input array being fcos
            and output being result; I'll probably use the
            guru interface to execute - that way I can apply the
            same plan to different arrays; the plan should be:
            `fftw_plan_r2r_1d(2*bw, fcos, result, FFTW_REDFT01, FFTW_ESTIMATE)`.
 */
-// TODO rename InvDLTSemi()
-void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* result, double* trans_cos_pml_table,
-                         double* sin_values, double* workspace, fftw_plan* fplan) {
+void InvDLTSemi(double* coeffs, const int bw, const int m, double* result, double* trans_cos_pml_table,
+                double* sin_values, double* workspace, fftw_plan* plan) {
     int size = 2 * bw;
 
     // for paranoia, zero out arrays
@@ -116,7 +115,7 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
 
     // take the inverse dct
     // Note that I am using the guru interface
-    fftw_execute_r2r(*fplan, fcos, result);
+    fftw_execute_r2r(*plan, fcos, result);
 
     if (!(m % 2))
         return;
@@ -138,20 +137,19 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
             Contains `bw-m` coeffs, with the <f,P(m,m)> coefficient located in `result[0]`;
    cos_pml_table - a pointer to an array containing the cosine series coefficients of
                    the Pmls (or Gmls) for this problem. This table can be compute using the
-                   `CosPmlTableGen()` function, and the offset for a particular Pml can be found
+                   `GenerateCosPmlTable()` function, and the offset for a particular Pml can be found
                     by calling the function `TableOffset()`. The size of the table is computed using
                     the `TableSize()` function. Note that since the cosine series are always 
                     zero-striped, the zeroes have been removed;
    weights - ptr to double array of size `4*bw` - this array holds the weights for both even
              (starting at `weights[0]`) and odd (`weights[2*bw]`) transforms;
    workspace - tmp space: pointer to double array of size `4*bw`;
-   fplan - pointer to `fftw_plan` with input array being weighted_data and output being cos_data;
+   plan - pointer to `fftw_plan` with input array being weighted_data and output being cos_data;
            I'll probably use the guru interface to execute; the plan should be:
            `fftw_plan_r2r_1d(2*bw, weighted_data, cos_data, FFTW_REDFT10, FFTW_ESTIMATE)`.
 */
-// TODO rename DLTSemi()
-void SemiNaiveReduced(double* data, const int bw, const int m, double* result, double* workspace,
-                      double* cos_pml_table, double* weights, fftw_plan* fplan) {
+void DLTSemi(double* data, const int bw, const int m, double* result, double* workspace, double* cos_pml_table,
+             double* weights, fftw_plan* plan) {
     int size = 2 * bw;
 
     double* weighted_data = workspace;
@@ -166,7 +164,7 @@ void SemiNaiveReduced(double* data, const int bw, const int m, double* result, d
             weighted_data[i] = data[i] * weights[i];
 
     // smooth the weighted signal
-    fftw_execute_r2r(*fplan, weighted_data, cos_data);
+    fftw_execute_r2r(*plan, weighted_data, cos_data);
 
     // normalize
     cos_data[0] *= M_SQRT1_2;

@@ -28,8 +28,8 @@
                   f(-2,2)      ...       f(-2,bw-1)
           f(-1,1) f(-1,2)      ...       f(-1,bw-1)
 
-    To help you out, the function `seanindex(m, l, bw)` defined in FST_semi_memo.c, returns the array index of
-    the coefficient f_{l,m} (so you know where it is).
+    To help you out, the function `IndexOfHarmonicCoeff(m, l, bw)` defined in FST_semi_memo.c,
+    returns the array index of the coefficient f_{l,m} (so you know where it is).
 
     The format of the input sample file will be an interleaved real/imaginary parts of the function samples
     arranged in "latitude-major" format, i.e. the function will be sampled in this order:
@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
 
     int size = 2 * bw;
     int cutoff = bw; // seminaive all orders
+    DataFormat data_format = COMPLEX;
 
     double* workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (10 * bw)));
     double* seminaive_naive_tablespace = (double*)malloc(
@@ -113,7 +114,7 @@ int main(int argc, char** argv) {
     fftw_plan inv_FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
                                                       workspace + (4 * bw * bw), FFTW_ESTIMATE);
 
-    makeweights(bw, weights);
+    GenerateWeightsForDLT(bw, weights);
 
     double* rcoeffs = (double*)malloc(sizeof(double) * (bw * bw));
     double* icoeffs = (double*)malloc(sizeof(double) * (bw * bw));
@@ -128,8 +129,8 @@ int main(int argc, char** argv) {
 
     double time_start = csecond();
     // inverse spherical transform
-    InvFST_semi_memo(rcoeffs, icoeffs, rdata, idata, bw, trans_seminaive_naive_table, workspace, 0, cutoff,
-                     &inv_DCT_plan, &inv_FFT_plan);
+    InvFSTSemiMemo(rcoeffs, icoeffs, rdata, idata, bw, trans_seminaive_naive_table, workspace, data_format, cutoff,
+                   &inv_DCT_plan, &inv_FFT_plan);
 
     fprintf(stderr, "inv time \t = %.4e\n", csecond() - time_start);
     fprintf(stdout, "about to write out samples\n");

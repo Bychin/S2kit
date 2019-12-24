@@ -28,8 +28,8 @@
 
     This means that there are (bw*bw) coefficients.
 
-    Once the coefficients are generated, the corresponding function is synthesized using InvFST_semi_memo(),
-    then transformed (analyzed) using FST_semi_memo(). Timing data is printed.
+    Once the coefficients are generated, the corresponding function is synthesized using InvFSTSemiMemo(),
+    then transformed (analyzed) using FSTSemiMemo(). Timing data is printed.
 
     Sample call:
 
@@ -38,7 +38,7 @@
     Appropriate timing data will be printed out.
 
     NOTE: In this program, the coefficients generated are such that the grid points (sample values) produced are *real*.
-    The routines InvFST_semi_fly() and FST_semi_fly() will take advantage of this. If you wish to change this,
+    The routines InvFSTSemiFly() and FSTSemiFly() will take advantage of this. If you wish to change this,
     change the 7th argument of each function further down from "1" to "0".
     This is also documented in the file FST_semi_fly.c.
 */
@@ -54,6 +54,7 @@
 #include "FST_semi_memo.h"
 #include "legendre_polynomials/cospml.h"
 #include "legendre_transform/weights.h"
+#include "util/util.h"
 
 #include "util/csecond.h"
 
@@ -69,7 +70,8 @@ int main(int argc, char** argv) {
     int size = 2 * bw;
 
     // TODO more tests with dataformat 0 and cutoff
-    int cutoff = bw / 4; // seminaive all orders
+    int cutoff = bw / 4; // = bw // seminaive all orders
+    DataFormat data_format = COMPLEX;
 
     double* workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (16 * bw)));
     double* seminaive_naive_tablespace = (double*)malloc(
@@ -130,7 +132,7 @@ int main(int argc, char** argv) {
     fftw_plan inv_FFT_plan = fftw_plan_guru_split_dft(rank, dims, howmany_rank, howmany_dims, rdata, idata, workspace,
                                                       workspace + (4 * bw * bw), FFTW_ESTIMATE);
 
-    makeweights(bw, weights);
+    GenerateWeightsForDLT(bw, weights);
 
     double* rcoeffs = (double*)malloc(sizeof(double) * (bw * bw));
     double* icoeffs = (double*)malloc(sizeof(double) * (bw * bw));
@@ -155,11 +157,11 @@ int main(int argc, char** argv) {
                 double x = 2.0 * (drand48() - 0.5);
                 double y = 2.0 * (drand48() - 0.5);
 
-                int index = seanindex(m, l, bw);
+                int index = IndexOfHarmonicCoeff(m, l, bw);
                 rcoeffs[index] = x;
                 icoeffs[index] = y;
 
-                index = seanindex(-m, l, bw);
+                index = IndexOfHarmonicCoeff(-m, l, bw);
                 rcoeffs[index] = pow(-1.0, m) * x;
                 icoeffs[index] = pow(-1.0, m + 1) * y;
             }
@@ -170,8 +172,8 @@ int main(int argc, char** argv) {
 
         double time_start = csecond();
         // inverse spherical transform
-        InvFST_semi_memo(rcoeffs, icoeffs, rdata, idata, bw, trans_seminaive_naive_table, workspace, 0, cutoff,
-                         &inv_DCT_plan, &inv_FFT_plan);
+        InvFSTSemiMemo(rcoeffs, icoeffs, rdata, idata, bw, trans_seminaive_naive_table, workspace, data_format, cutoff,
+                       &inv_DCT_plan, &inv_FFT_plan);
 
         double duration = csecond() - time_start;
         inv_time += duration;
@@ -179,8 +181,8 @@ int main(int argc, char** argv) {
 
         time_start = csecond();
         // forward spherical transform
-        FST_semi_memo(rdata, idata, rresult, iresult, bw, seminaive_naive_table, workspace, 0, cutoff, &DCT_plan,
-                      &FFT_plan, weights);
+        FSTSemiMemo(rdata, idata, rresult, iresult, bw, seminaive_naive_table, workspace, data_format, cutoff,
+                    &DCT_plan, &FFT_plan, weights);
 
         duration = csecond() - time_start;
         fwd_time += duration;
@@ -245,11 +247,11 @@ int main(int argc, char** argv) {
 
         for (int m = 0; m < bw; ++m) {
             for (int l = m; l < bw; ++l) {
-                int index = seanindex(m, l, bw);
+                int index = IndexOfHarmonicCoeff(m, l, bw);
                 fprintf(errorsfp, "index = %d\t m = %d\tl = %d\t%.10f  %.10f\n", index, m, l,
                         fabs(rcoeffs[index] - rresult[index]), fabs(icoeffs[index] - iresult[index]));
 
-                index = seanindex(-m, l, bw);
+                index = IndexOfHarmonicCoeff(-m, l, bw);
                 fprintf(errorsfp, "index = %d\t m = %d\tl = %d\t%.10f  %.10f\n", index, -m, l,
                         fabs(rcoeffs[index] - rresult[index]), fabs(icoeffs[index] - iresult[index]));
             }
