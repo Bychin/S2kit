@@ -19,16 +19,16 @@ LDFLAGS = -lm -m64 -fPIC
 
 # naive
 # TODO check src
-NAIVESRC = chebyshev_nodes.c pmm.c util.c pml.c naive.c weights.c csecond.c
+NAIVESRC = chebyshev_nodes.c pmm.c l2_norms.c vector_funcs.c pml.c naive.c weights.c csecond.c
 NAIVEOBJ = $(addsuffix .o,$(basename $(NAIVESRC)))
 
 # semi-naive
-SEMISRC = chebyshev_nodes.c pmm.c pml.c cospml.c seminaive.c csecond.c util.c weights.c
+SEMISRC = chebyshev_nodes.c pmm.c pml.c cospml.c seminaive.c csecond.c l2_norms.c vector_funcs.c weights.c
 SEMIOBJ = $(addsuffix .o,$(basename $(SEMISRC)))
 
 # semi-naive spherical transform and convolution
-FSTSEMISRC = $(SEMISRC) naive.c
-FSTSEMIOBJ = $(SEMIOBJ) naive.o
+FSTSEMISRC = $(SEMISRC) naive.c util.c
+FSTSEMIOBJ = $(SEMIOBJ) naive.o util.o
 FSTSEMIOBJFLY  = $(FSTSEMIOBJ) FST_semi_fly.o
 FSTSEMIOBJMEMO = $(FSTSEMIOBJ) FST_semi_memo.o
 
@@ -120,6 +120,12 @@ pml.o:
 
 pmm.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pmm.o $(SRC_DIR)/legendre_polynomials/pmm.c
+
+l2_norms.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/l2_norms.o $(SRC_DIR)/legendre_polynomials/util/l2_norms.c
+
+vector_funcs.o:
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/vector_funcs.o $(SRC_DIR)/legendre_polynomials/util/vector_funcs.c
 
 naive.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/naive.o $(SRC_DIR)/legendre_transform/naive.c

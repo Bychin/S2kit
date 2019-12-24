@@ -64,6 +64,7 @@
            same plan to different arrays; the plan should be:
            `fftw_plan_r2r_1d(2*bw, fcos, result, FFTW_REDFT01, FFTW_ESTIMATE)`.
 */
+// TODO rename InvDLTSemi()
 void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* result, double* trans_cos_pml_table,
                          double* sin_values, double* workspace, fftw_plan* fplan) {
     int size = 2 * bw;
@@ -148,6 +149,7 @@ void InvSemiNaiveReduced(double* coeffs, const int bw, const int m, double* resu
            I'll probably use the guru interface to execute; the plan should be:
            `fftw_plan_r2r_1d(2*bw, weighted_data, cos_data, FFTW_REDFT10, FFTW_ESTIMATE)`.
 */
+// TODO rename DLTSemi()
 void SemiNaiveReduced(double* data, const int bw, const int m, double* result, double* workspace,
                       double* cos_pml_table, double* weights, fftw_plan* fplan) {
     int size = 2 * bw;

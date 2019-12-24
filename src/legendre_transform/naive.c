@@ -22,6 +22,7 @@
                 (see pml.c). Note that these Legendres are normalized with norm equal to 1;
     workspace - array of size `2*bw`;
 */
+// TODO rename DLTNaive()
 void Naive_AnalysisX(double* data, const int bw, const int m, double* weights, double* result,
                      double* plmtable, double* workspace) {
     int size = 2 * bw;
@@ -70,6 +71,7 @@ void Naive_AnalysisX(double* data, const int bw, const int m, double* weights, d
 
     Note that these Legendres are normalized with norm equal to 1!
 */
+// TODO rename InvDLTNaive()
 void Naive_SynthesizeX(double* coeffs, const int bw, const int m, double* result, double* plmtable) {
     memset(result, 0, sizeof(double) * 2 * bw); // make sure result is zeroed out
 

@@ -9,9 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pmm.h"
 #include "util/chebyshev_nodes.h"
-#include "util/util.h"
+
+#include "pmm.h"
+#include "util/l2_norms.h"
+#include "util/vector_funcs.h"
 
 /*
     Generates all of the Pmls for a specified value of `m`.

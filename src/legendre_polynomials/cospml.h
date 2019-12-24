@@ -1,6 +1,8 @@
 #ifndef _COSPML_H
 #define _COSPML_H
 
+// TODO rename
+
 int TableSize(const int, const int);
 
 int Spharmonic_TableSize(const int);

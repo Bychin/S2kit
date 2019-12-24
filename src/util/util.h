@@ -1,20 +1,11 @@
-// TODO move this file into legendre_polynomials
-
 #ifndef _UTIL_H
 #define _UTIL_H
 
-double L2_an(const int, const int);
+void inline ComplexMult(const double, const double, const double, const double, double*, double*);
 
-double L2_cn(const int, const int);
+// TODO rename
+int seanindex(const int, const int, const int);
 
-double L2_cn_inv(const int, const int);
-
-double L2_ancn(const int, const int);
-
-void vec_add(double*, double*, double*, const int);
-
-void vec_mul(const double, double*, double*, const int);
-
-void vec_dot(double*, double*, double*, const int);
+void TransMult(double*, double*, double*, double*, double*, double*, const int);
 
 #endif // _UTIL_H

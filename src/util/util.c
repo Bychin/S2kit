@@ -1,92 +1,85 @@
 /*
-    Contains some utility functions.
+    Contains utility functions:
+
+    1) ComplexMult()     - multiplies two complex numbers;
+    2) seanindex(m,l,bw) - gives the position of the coefficient f-hat(m,l) in the one-row array;
+    3) TransMult()       - multiplies harmonic coefficients using Driscoll-Healy result,
+                           dual of convolution in "time" domain.
 */
 
 #include "util.h"
 
 #include <math.h>
-#include <string.h>
+#include <stdlib.h>
 
-/*
-    Recurrence coefficents for L2-normed associated Legendre recurrence.
-
-    When using these coeffs, make sure that inital Pmm function is also L2-normed.
-
-    l - degree;
-    m - order.
-*/
-
-double L2_an(const int m, const int l) {
-    return (
-        sqrt(
-            ((2. * l + 3.) / (2. * l + 1.)) * ((l - m + 1.) / (l + m + 1.))
-        ) * ((2. * l + 1.) / (l - m + 1.))
-    );
+// Multiplies two complex numbers (x+iy * u+iv) and stores result separately for real and imaginary part.
+void inline ComplexMult(const double x, const double y, const double u, const double v,
+                        double* real_result, double* imag_result) {
+    *real_result = x * u - y * v;
+    *imag_result = x * v - y * u;
 }
 
-double L2_cn(const int m, const int l) {
-    if (!l) {
-        return 0.;
+/*
+    Returns the position of the coefficient `f-hat(m,l)` in the one-row
+    array that Sean stores the spherical coefficients. This is needed
+    to help preserve the symmetry that the coefficients have: 
+    (`l` = degree, `m` = order, and `abs(m)` <= `l`)
+
+    f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
+*/
+int seanindex(const int m, const int l, const int bw) {
+    int bigL = bw - 1;
+
+    if (m >= 0)
+        return (m * (bigL + 1) - ((m * (m - 1)) / 2) + (l - m));
+
+    return (((bigL * (bigL + 3)) / 2) + 1 + ((bigL + m) * (bigL + m + 1) / 2) + (l - abs(m)));
+}
+
+/*
+    Multiplies harmonic coefficients of a function and a filter.
+    See convolution theorem of Driscoll and Healy for details.
+
+    bw - bandwidth of problem
+
+    datacoeffs should be output of an SHT, filtercoeffs the
+    output of an ZHT.  There should be (bw * bw) datacoeffs,
+    and bw filtercoeffs.
+    rres and ires should point to arrays of dimension bw * bw.
+*/
+void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, double* ifiltercoeffs, double* rres,
+               double* ires, const int bw) {
+    double* rdptr = rdatacoeffs;
+    double* idptr = idatacoeffs;
+    double* rrptr = rres;
+    double* irptr = ires;
+
+    for (int m = 0; m < bw; ++m) {
+        for (int l = m; l < bw; ++l) {
+            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - m], idptr[l - m], rrptr + l - m, irptr + l - m);
+
+            rrptr[l - m] *= sqrt(4. * M_PI / (2. * l + 1.));
+            irptr[l - m] *= sqrt(4. * M_PI / (2. * l + 1.));
+        }
+        rdptr += bw - m;
+        idptr += bw - m;
+        rrptr += bw - m;
+        irptr += bw - m;
     }
 
-    return (
-        -1.0 * sqrt(
-            ((2. * l + 3.) / (2. * l - 1.)) * ((l - m + 1.) / (l + m + 1.)) * (((double)l - m) / ((double)l + m))
-        ) * ((l + m) / (l - m + 1.))
-    );
-}
+    int size = 2 * bw;
+    for (int m = bw + 1; m < size; ++m) {
+        for (int l = size - m; l < bw; ++l) {
+            ComplexMult(rfiltercoeffs[l], ifiltercoeffs[l], rdptr[l - size + m], idptr[l - size + m],
+                        rrptr + l - size + m, irptr + l - size + m);
 
-// Note: when using the reverse recurrence, instead of `1/L2_cn(m,l)`
-double L2_cn_inv(const int m, const int l) {
-    return (
-        -(1.0 + (1. - 2. * m) / ((double)m + l)) *
-            sqrt(
-                ((-1. + 2. * l) / (3. + 2. * l)) * (
-                    (l + l * l + m + 2. * l * m + m * m) /
-                        (l + l * l - m - 2. * l * m + m * m)
-                )
-            )
-    );
-}
+            rrptr[l - size + m] *= sqrt(4. * M_PI / (2. * l + 1.));
+            irptr[l - size + m] *= sqrt(4. * M_PI / (2. * l + 1.));
+        }
 
-// Note: when using the reverse recurrence, instead of `-L2_an(m,l)/L2_cn(m,l)`
-double L2_ancn(const int m, const int l) {
-    return (
-        sqrt(4. + ((4. * m * m - 1.) / ((double)l * l - m * m)))
-    );
-}
-
-/*
-    Vector arithmetic operations
-*/
-
-/*
-    Adds two vectors into a third one.
-    `result = v1 + v2`
-
-    Note: `result` and `v{1,2}` must be vectors of length `len`
-*/
-void vec_add(double* v1, double* v2, double* result, const int len) {
-    for (int i = 0; i < len; ++i)
-        result[i] = v1[i] + v2[i];
-}
-
-/*
-    Multiplies the vector `v` by `scalar` and returns in `result`.
-
-    Note: `result` and `v` must be vectors of length `len`
-*/
-void vec_mul(const double scalar, double* v, double* result, const int len) {
-    for (int i = 0; i < len; ++i)
-        result[i] = scalar * v[i];
-}
-
-/* 
-    Returns dot product of `v1` and `v2` in `result`
-
-    Note: `result` and `v{1,2}` must be vectors of length `len`
-*/
-void vec_dot(double* data1, double* data2, double* result, const int len) {
-    for (int i = 0; i < len; ++i)
-        result[i] = data1[i] * data2[i];
+        rdptr += m - bw;
+        idptr += m - bw;
+        rrptr += m - bw;
+        irptr += m - bw;
+    }
 }

@@ -11,10 +11,12 @@
 
 #include <fftw3.h>
 
+#include "util/chebyshev_nodes.h"
+
 #include "pml.h"
 #include "pmm.h"
-#include "util/chebyshev_nodes.h"
-#include "util/util.h"
+#include "util/l2_norms.h"
+#include "util/vector_funcs.h"
 
 /*
     Utility functions for table management.
