@@ -176,40 +176,9 @@ void FSTSemiMemo(double* rdata, double* idata, double* rcoeffs, double* icoeffs,
         purposes of indexing the input data arrays. The "true"
         value of `m` as a parameter for Pml is `size-m` 
     */
-    // TODO into two cycles?
-    for (int m = bw + 1; m < size; ++m) {
-        if ((size - m) < cutoff) { // semi-naive part
-            // real part
-            DLTSemi(rres + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
-                    weights, DCT_plan);
-            // load real part of coefficients into output space
-            if (m % 2) {
-                for (int i = 0; i < m - bw; ++i)
-                    rdataptr[i] = -fltres[i];
-            } else {
-                memcpy(rdataptr, fltres, sizeof(double) * (m - bw));
-            }
-            rdataptr += m - bw;
-
-            // imaginary part
-            DLTSemi(ires + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
-                    weights, DCT_plan);
-            // load imaginary part of coefficients into output space
-            if (m % 2) {
-                for (int i = 0; i < m - bw; ++i)
-                    idataptr[i] = -fltres[i];
-            } else {
-                memcpy(idataptr, fltres, sizeof(double) * (m - bw));
-            }
-            idataptr += m - bw;
-
-            continue;
-        }
-        
-        // naive part
+    for (int m = bw + 1; m <= size - cutoff; ++m) { // naive part
         // real part
-        DLTNaive(rres + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
-                        scratchpad);
+        DLTNaive(rres + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m], scratchpad);
         // load real part of coefficients into output space
         if (m % 2) {
             for (int i = 0; i < m - bw; ++i)
@@ -220,8 +189,33 @@ void FSTSemiMemo(double* rdata, double* idata, double* rcoeffs, double* icoeffs,
         rdataptr += m - bw;
 
         // imaginary part
-        DLTNaive(ires + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m],
-                        scratchpad);
+        DLTNaive(ires + (m * size), bw, size - m, weights, fltres, seminaive_naive_table[size - m], scratchpad);
+        // load imaginary part of coefficients into output space
+        if (m % 2) {
+            for (int i = 0; i < m - bw; ++i)
+                idataptr[i] = -fltres[i];
+        } else {
+            memcpy(idataptr, fltres, sizeof(double) * (m - bw));
+        }
+        idataptr += m - bw;
+    }
+
+    for (int m = size - cutoff + 1; m < size; ++m) { // semi-naive part
+        // real part
+        DLTSemi(rres + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
+                weights, DCT_plan);
+        // load real part of coefficients into output space
+        if (m % 2) {
+            for (int i = 0; i < m - bw; ++i)
+                rdataptr[i] = -fltres[i];
+        } else {
+            memcpy(rdataptr, fltres, sizeof(double) * (m - bw));
+        }
+        rdataptr += m - bw;
+
+        // imaginary part
+        DLTSemi(ires + (m * size), bw, size - m, fltres, scratchpad, seminaive_naive_table[size - m],
+                weights, DCT_plan);
         // load imaginary part of coefficients into output space
         if (m % 2) {
             for (int i = 0; i < m - bw; ++i)
@@ -316,33 +310,29 @@ void InvFSTSemiMemo(double* rcoeffs, double* icoeffs, double* rdata, double* ida
     */
     if (data_format == COMPLEX) {
         // do negative m values
-        // TODO into two cycles?
-        for (int m = bw + 1; m < size; ++m) {
-            if ((size - m) < cutoff) { // semi-naive part
-                InvDLTSemi(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m],
-                           sin_values, scratchpad, inv_DCT_plan);
-                InvDLTSemi(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m],
-                           sin_values, scratchpad, inv_DCT_plan);
-
-                // store normal, then tranpose before doing inverse fft
-                if (m % 2)
-                    for (int i = 0; i < size; ++i) {
-                        rinvfltres[i] *= -1.0;
-                        iminvfltres[i] *= -1.0;
-                    }
-
-                memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
-                memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
-
-                rdataptr += bw - (size - m);
-                idataptr += bw - (size - m);
-
-                continue;
-            }
-
-            // naive part
+        for (int m = bw + 1; m <= size - cutoff; ++m) { // naive part
             InvDLTNaive(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m]);
             InvDLTNaive(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m]);
+
+            // store normal, then tranpose before doing inverse fft
+            if (m % 2)
+                for (int i = 0; i < size; ++i) {
+                    rinvfltres[i] *= -1.0;
+                    iminvfltres[i] *= -1.0;
+                }
+
+            memcpy(rfourdata + (m * size), rinvfltres, sizeof(double) * size);
+            memcpy(ifourdata + (m * size), iminvfltres, sizeof(double) * size);
+
+            rdataptr += bw - (size - m);
+            idataptr += bw - (size - m);
+        }
+
+        for (int m = size - cutoff + 1; m < size; ++m) { // semi-naive part
+            InvDLTSemi(rdataptr, bw, size - m, rinvfltres, transpose_seminaive_naive_table[size - m],
+                       sin_values, scratchpad, inv_DCT_plan);
+            InvDLTSemi(idataptr, bw, size - m, iminvfltres, transpose_seminaive_naive_table[size - m],
+                       sin_values, scratchpad, inv_DCT_plan);
 
             // store normal, then tranpose before doing inverse fft
             if (m % 2)
