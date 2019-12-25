@@ -99,16 +99,9 @@ void FSTSemiMemo(double* rdata, double* idata, double* rcoeffs, double* icoeffs,
     // do the FFTs along phi
     fftw_execute_split_dft(*FFT_plan, rdata, idata, rres, ires);
 
-    /*
-        normalize
-
-        // TODO rewrite
-        note that I'm getting the sqrt(2*pi) in there at
-        this point ... to account for the fact that the spherical
-        harmonics are of norm 1: I need to account for
-        the fact that the associated Legendres are
-        of norm 1
-    */
+    // Normalize
+    // The associated Legendres are of norm 1, so because the spherical
+    // harmonics are of norm 1 we are using coeff of sqrt(2*pi) here.
     double normed_coeff = sqrt(2. * M_PI) / size;
     for (int i = 0; i < size * size; ++i) {
         rres[i] *= normed_coeff;
