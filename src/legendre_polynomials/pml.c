@@ -1,6 +1,7 @@
-/*
-    Source code for generating cosine transforms of Pml and Gml functions.
-*/
+/**
+ * @file pml.c
+ * @brief Source code for generating table of associated Legendre functions (Pml).
+ */
 
 #include "pml.h"
 
@@ -15,27 +16,28 @@
 #include "util/l2_norms.h"
 #include "util/vector_funcs.h"
 
-/*
-    Generates all of the Pmls for a specified value of `m`.
-
-    bw        - bandwidth;
-    m         - order;
-    pml_table - array of size 2*bw*(bw-m);
-    workspace - array of size 16*bw
-
-    P(m,l,j) respresents the associated Legendre function P_l^m evaluated at the j-th Chebyshev point
-    (for the bandwidth `bw`) cos((2 * j + 1) * PI / (2 * bw)).
-
-    The array is placed in pml_table as follows:
-    P(m,m,0)      P(m,m,1)    ...  P(m,m,2*bw-1)
-    P(m,m+1,0)    P(m,m+1,1)  ...  P(m,m+1,2*bw-1)
-    P(m,m+2,0)    P(m,m+2,1)  ...  P(m,m+2,2*bw-1)
-    ...
-    P(m,bw-1,0)   P(m,bw-1,1) ...  P(m,bw-1,2*bw-1)
-
-    This array will eventually be used by the naive transform algorithm.
-    This function will precompute the arrays necessary for the algorithm.
-*/
+/**
+ * @brief Generates all of the Pmls for a specified value of @p m.
+ * 
+ * @c P(m,l,j) respresents the associated Legendre function <tt>P_l^m</tt> evaluated at the j-th Chebyshev
+ * point (for the bandwidth @p bw): <tt>cos((2 * j + 1) * PI / (2 * bw))</tt>.
+ *
+ * The array is placed in @p pml_table as follows:
+ * @code
+ * P(m,m,0)      P(m,m,1)    ...  P(m,m,2*bw-1)
+ * P(m,m+1,0)    P(m,m+1,1)  ...  P(m,m+1,2*bw-1)
+ * P(m,m+2,0)    P(m,m+2,1)  ...  P(m,m+2,2*bw-1)
+ *   ...
+ * P(m,bw-1,0)   P(m,bw-1,1) ...  P(m,bw-1,2*bw-1)
+ * @endcode
+ * This array will eventually be used by the naive transform algorithm (see naive.c).\n
+ * This function will precompute the arrays necessary for the algorithm.
+ *
+ * @param bw bandwidth
+ * @param m order
+ * @param pml_table result array with generated Pmls of size @c 2*bw*(bw-m)
+ * @param workspace space for computations of size @c 16*bw
+ */
 void GeneratePmlTable(const int bw, const int m, double* pml_table, double* workspace) {
     int size = 2 * bw;
 

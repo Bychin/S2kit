@@ -1,17 +1,12 @@
-/*
-    FST_semi_fly.c - routines to perform convolutions on the 2-sphere using a combination of
-    semi-naive and naive algorithms.
-
-    Just like FST_semi_memo.c, except that these routines compute associated Legendre func on the fly.
-
-    The primary functions in this package are:
-    1) FSTSemiFly()           - computes the spherical harmonic transform;
-    2) InvFSTSemiFly()        - computes the inverse spherical harmonic transform;
-    3) FZTSemiFly()           - computes the zonal harmonic transform;
-    4) ConvOn2SphereSemiFly() - convolves two functins defined on the 2-sphere, using seminaive transform.
-
-    For descriptions on calling these functions, see the documentation preceding each function.
-*/
+/**
+ * @file FST_semi_fly.c
+ * @brief Routines to perform spherical harmonic transforms and convolutions on the 2-sphere using
+ * a combination of semi-naive and naive algorithms.
+ *
+ * Just like FST_semi_memo.c, except that these routines compute associated Legendre functions on
+ * the fly.\n
+ * For descriptions on calling these functions, see the documentation preceding each function.
+ */
 
 #include "FST_semi_fly.h"
 
@@ -29,52 +24,49 @@
 #include "util/chebyshev_nodes.h"
 #include "util/util.h"
 
-/*
-    Performs a spherical harmonic transform using the semi-naive and naive algorithms.
-
-  bw -> bandwidth of problem
-  size -> size = 2*bw -> dimension of input array (recall that
-          sampling is done at twice the bandwidth)
-
-  The inputs rdata and idata are expected to be pointers to
-  size x size arrays. The array rdata contains the real parts
-  of the function samples, and idata contains the imaginary
-  parts.
-
-  rcoeffs and icoeffs are expected to be pointers to bw x bw arrays,
-  and will contain the harmonic coefficients in a "linearized" form.
-  The array rcoeffs contains the real parts of the coefficients,
-  and icoeffs contains the imaginary parts.
-
-  workspace needs to be a double pointer to an array of size
-  (10 * bw^2) + (21 * bw)
-
-  cutoff -> what order to switch from semi-naive to naive
-            algorithm. // TODO add check that cutoff<bw?
-
-
-   Output Ordering of coeffs f(m,l) is
-   f(0,0) f(0,1) f(0,2) ... f(0,bw-1)
-          f(1,1) f(1,2) ... f(1,bw-1)
-          etc.
-                 f(bw-2,bw-2), f(bw-2,bw-1)
-                       f(bw-1,bw-1)
-                   f(-(bw-1),bw-1)
-         f(-(bw-2),bw-2) f(-(bw-2),bw-1)
-      etc.
-              f(-2,2) ... f(-2,bw-1)
-      f(-1,1) f(-1,2) ... f(-1,bw-1)
-
-   This only requires an array of size (bw*bw).  If zero-padding
-   is used to make the indexing nice, then you need a an
-   (2bw-1) * bw array - but that is not done here.
-   Because of the amount of space necessary for doing
-   large transforms, it is important not to use any
-   more than necessary.
-*/
+/**
+ * @brief Computes <b>spherical harmonic transform</b> using the seminaive and naive algorithms.
+ *
+ * Output ordering of coeffs (in @p rcoeffs and @p icoeffs) <tt>f(m,l)</tt> is:
+ * @code
+ * f(0,0) f(0,1) f(0,2) ... f(0,bw-1)
+ *        f(1,1) f(1,2) ... f(1,bw-1)
+ *        etc.
+ *            f(bw-2,bw-2), f(bw-2,bw-1)
+ *                          f(bw-1,bw-1)
+ *                          f(-(bw-1),bw-1)
+ *         f(-(bw-2),bw-2), f(-(bw-2),bw-1)
+ *        etc.
+ *              f(-2,2) ... f(-2,bw-1)
+ *      f(-1,1) f(-1,2) ... f(-1,bw-1)
+ * @endcode
+ *
+ * This only requires an array of size @c bw*bw. If zero-padding is used to make the indexing nice,
+ * then you need a an <tt>(2bw-1)*bw</tt> array, but that is not done here. Because of the amount
+ * of space necessary for doing large transforms, it is important not to use any more than
+ * necessary.
+ *
+ * @param rdata array of length <tt>4*bw*bw</tt> of the real part of the function samples
+ * @param idata array of length <tt>4*bw*bw</tt> of the imaginary part of the function samples
+ * @param rcoeffs array of length <tt>bw*bw</tt> which will contain the real part of harmonic
+ * coefficients in a linearized form
+ * @param icoeffs array of length <tt>bw*bw</tt> which will contain the imaginary part of harmonic
+ * coefficients in a linearized form
+ * @param bw bandwidth of problem
+ * @param workspace space for computations of size <tt>(10*bw*bw)+(21*bw)</tt>
+ * @param data_format determines the format of the computed data
+ * @param cutoff determines order to switch from seminaive to naive algorithm
+ * @param DCT_plan plan for DLT which is used as argument for call DLTSemi()
+ * @param FFT_plan plan for FFT
+ * @param weights array which is used as argument for call DLTSemi() and DLTNaive()
+ *
+ * @note See more info about @p DCT_plan and @p weights in DLTSemi().
+ */
 void FSTSemiFly(double* rdata, double* idata, double* rcoeffs, double* icoeffs, const int bw, double* workspace,
                 DataFormat data_format, const int cutoff, fftw_plan* DCT_plan, fftw_plan* FFT_plan, double* weights) {
+    // TODO add check that cutoff<bw?
     int size = 2 * bw;
+
     double* rres = workspace;                  // needs (size * size) = (4 * bw^2)
     double* ires = rres + (size * size);       // needs (size * size) = (4 * bw^2)
     double* fltres = ires + (size * size);     // needs bw
@@ -216,15 +208,25 @@ void FSTSemiFly(double* rdata, double* idata, double* rcoeffs, double* icoeffs, 
     }
 }
 
-/*
-    Inverse spherical harmonic transform.  Inputs rcoeffs and icoeffs
-    are harmonic coefficients stored in (bw * bw) arrays in the order
-    spec'ed above.  rdata and idata are (size x size) arrays with
-    the transformed result.  size is expected to be 2 * bw.
-    transpose_spharmonic_pml_table should be the (double **) result of a call
-    to Transpose_Spharmonic_Pml_Table()
-
-    workspace is (10 * bw^2) + (24 * bw)
+/**
+ * @brief Computes <b>inverse spherical harmonic transform</b>.
+ *
+ * @param rcoeffs array of length <tt>bw*bw</tt> of the real part of harmonic coefficients
+ * @param icoeffs array of length <tt>bw*bw</tt> of the imaginary part of harmonic coefficients
+ * @param rdata array of length <tt>4*bw*bw</tt> which will contain the real part of transformed
+ * result
+ * @param idata array of length <tt>4*bw*bw</tt> which will contain the imaginary part of
+ * transformed result
+ * @param bw bandwidth of problem
+ * @param workspace space for computations of size <tt>(10*bw*bw)+(24*bw)</tt>
+ * @param data_format determines the format of the computed data
+ * @param cutoff determines order to switch from seminaive to naive algorithm
+ * @param inv_DCT_plan plan for inverse DLT which is used as argument for call InvDLTSemi()
+ * @param inv_FFT_plan plan for inverse FFT
+ *
+ * @note The real and imaginary part of harmonic coefficients should be stored in @p rcoeffs and
+ * @p icoeffs before passing to this function in the same order as it was mentioned in FSTSemiFly().
+ * @note See more info about @p inv_DCT_plan in InvDLTSemi().
 */
 void InvFSTSemiFly(double* rcoeffs, double* icoeffs, double* rdata, double* idata, const int bw, double* workspace,
                    DataFormat data_format, const int cutoff, fftw_plan* inv_DCT_plan, fftw_plan* inv_FFT_plan) {
@@ -362,18 +364,25 @@ void InvFSTSemiFly(double* rcoeffs, double* icoeffs, double* rdata, double* idat
     fftw_execute_split_dft(*inv_FFT_plan, ifourdata, rfourdata, idata, rdata);
 }
 
-/*
-    Zonal Harmonic transform using seminaive algorithm - used in convolutions.
-
-    rdata and idata should be pointers to size x size arrays.
-   rres and ires should be pointers to double arrays of size bw.
-   size = 2 * bw
-   cos_pml_table contains Legendre coefficients of P(0,l) functions
-   and is result of GenerateCosPmlTable for m = 0;
-   FZT_semi only computes spherical harmonics for m=0.
-
-   workspace needed is (12 * bw)
-*/
+/**
+ * @brief Computes <b>zonal harmonic transform</b> using seminaive algorithm.
+ *
+ * This transform is used in convolutions. Only computes spherical harmonics for <tt>m=0</tt>.
+ * 
+ * @param rdata array of length <tt>4*bw*bw</tt> of the real part of the data samples
+ * @param idata array of length <tt>4*bw*bw</tt> of the imaginary part of the data samples
+ * @param rres array of length <tt>bw</tt> which will contain the real part of harmonic
+ * coefficients
+ * @param ires array of length <tt>bw</tt> which will contain the imaginary part of harmonic
+ * coefficients
+ * @param bw bandwidth of problem
+ * @param workspace space for computations of size <tt>12*bw</tt>
+ * @param data_format determines the format of the computed data
+ * @param DCT_plan plan for DLT which is used as argument for call DLTSemi()
+ * @param weights array which is used as argument for call DLTSemi()
+ * 
+ * @note See more info about @p DCT_plan and @p weights in DLTSemi().
+ */
 void FZTSemiFly(double* rdata, double* idata, double* rres, double* ires, const int bw, double* workspace,
                 DataFormat data_format, fftw_plan* DCT_plan, double* weights) {
     int size = 2 * bw;
@@ -411,37 +420,30 @@ void FZTSemiFly(double* rdata, double* idata, double* rres, double* ires, const 
         memset(ires, 0, sizeof(double) * size);
 }
 
-/*
-    Convolves two functions defined on the 2-sphere.
-   Uses seminaive algorithms for spherical harmonic transforms
-   size = 2*bw
-   Inputs:
-   rdata, idata - (size * size) arrays containing real and
-                  imaginary parts of sampled function.
-   rfilter, ifilter - (size * size) arrays containing real and
-                      imaginary parts of sampled filter function.
-   rres, ires - (size * size) arrays containing real and
-                  imaginary parts of result function.
-   size - should be 2 * bw
-
-   Suggestion - if you want to do multiple convolutions,
-   don't keep allocating and freeing space with every call,
-   or keep recomputing the spharmonic_pml tables.
-   Allocate workspace once before you call this function, then
-   just set up pointers as first step of this procedure rather
-   than mallocing. And do the same with the FST, FZT, and InvFST functions.
-
-   Memory requirements for Conv2Sphere
-
-   4*bw^2 +
-   2*bw +
-   10*bw^2 + 24*bw =
-   14*bw^2 + 26*bw
-
-   ASSUMPTIONS:
-   1. data is strictly REAL
-   2. will do semi-naive algorithm for ALL orders
-*/
+/**
+ * @brief <b>Convolves</b> two functions defined on the 2-sphere.
+ *
+ * Uses seminaive algorithms for spherical harmonic transforms.\n
+ * Memory requirements for Conv2Sphere:\n
+ * @code
+ * 4*bw^2 + 2*bw + 10*bw^2 + 24*bw = 14*bw^2 + 26*bw
+ * @endcode
+ *
+ * @param rdata array of length <tt>4*bw*bw</tt> of the real part of sampled function
+ * @param idata array of length <tt>4*bw*bw</tt> of the imaginary part of sampled function
+ * @param rfilter array of length <tt>4*bw*bw</tt> of the real part of sampled filter function
+ * @param ifilter array of length <tt>4*bw*bw</tt> of the imaginary part of sampled filter function
+ * @param rres array of length <tt>4*bw*bw</tt> which will contain the real part of result function
+ * @param ires array of length <tt>4*bw*bw</tt> which will contain the imaginary part of result
+ * function
+ * @param bw bandwidth of problem
+ * @param workspace space for computations of size <tt>(14*bw*bw)+(26*bw)</tt>
+ *
+ * @note We assume that data is real.
+ * @note This function will do seminaive algorithm for all orders.
+ * @note If you want to do multiple convolutions, you can freely reuse once allocated workspace.
+ * Same for FSTSemiFly(), FZTSemiFly() and InvFSTSemiFly() functions.
+ */
 void ConvOn2SphereSemiFly(double* rdata, double* idata, double* rfilter, double* ifilter, double* rres, double* ires,
                           const int bw, double* workspace) {
     int size = 2 * bw;

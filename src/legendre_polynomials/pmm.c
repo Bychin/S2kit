@@ -1,15 +1,23 @@
+/**
+ * @file pmm.c
+ * @brief Source code for generating L2-normed associated Legendre functions Pmm.
+ */
+
 #include "pmm.h"
 
 #include <math.h>
 
-/*
-    Returns L2-normed Pmm.
-
-    The norming constant can be found in Sean's PhD thesis (I didn't find it).
-    
-    Note: input must be of order `m`, `eval_points` must be an array of length `n` of the angular
-    arguments of evaluation points, `result` must be an array of length `n`
-*/
+/**
+ * @brief Generates L2-normed Pmm.
+ *
+ * The norming constant can be found in Sean's PhD thesis.
+ * // TODO find out the thesis
+ *
+ * @param m order
+ * @param eval_points array of the angular arguments of evaluation points
+ * @param n length of @p eval_points @b and of @p result
+ * @param result array of generated L2-normed Pmm
+ */
 void Pmm_L2(const int m, double* eval_points, const int n, double* result) {
     double normed_coeff = sqrt(m + 0.5);
 

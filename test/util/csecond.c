@@ -1,6 +1,8 @@
-/*
-    Timing function, creator Mark Taylor.
-*/
+/**
+ * @file csecond.c
+ * @brief Timing function.
+ * @author Mark Taylor
+ */
 
 #include "csecond.h"
 

@@ -1,33 +1,44 @@
-/*
-    Contains utility functions:
-
-    1) IndexOfHarmonicCoeff(m,l,bw) - gives the position of the coefficient f-hat(m,l) in the one-row array;
-    2) TransMult()                  - multiplies harmonic coefficients using Driscoll-Healy result,
-                                      dual of convolution in "time" domain.
-*/
+/**
+ * @file util.c
+ * @brief Utility functions needed for transforms.
+ */
 
 #include "util.h"
 
 #include <math.h>
 #include <stdlib.h>
 
-// Multiplies two complex numbers (x+iy * u+iv) and stores result separately for real and imaginary part.
+/**
+ * @brief Multiplies two complex numbers.
+ * 
+ * The result is stored separately for real and imaginary part.
+ *
+ * @param x real part of the first number
+ * @param y imaginary part of the first number
+ * @param u real part of the second number
+ * @param v imaginary part of the second number
+ * @param real_result real part of the result
+ * @param imag_result imaginary part of the result
+ */
 void inline ComplexMult(const double x, const double y, const double u, const double v,
                         double* real_result, double* imag_result) {
     *real_result = x * u - y * v;
     *imag_result = x * v - y * u;
 }
 
-/*
-    Returns the position of the coefficient `f-hat(m,l)` in the one-row
-    array that Sean stores the spherical coefficients. This is needed
-    to help preserve the symmetry that the coefficients have: 
-    (`l` = degree, `m` = order, and `abs(m)` <= `l`)
-
-    f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
-
-    Previous name was `seanindex`
-*/
+/**
+ * @brief Gives the position of the coefficient <tt>f-hat(m,l)</tt> in the one-row array.
+ * 
+ * Returns the position of the coefficient <tt>f-hat(m,l)</tt> in the one-row array with
+ * the spherical coefficients. It helps to preserve the symmetry that the coefficients have:
+ * @code
+ * f-hat(l,-m) = (-1)^m * conjugate( f-hat(l,m) )
+ * @endcode
+ *
+ * @param m order
+ * @param l degree
+ * @param bw bandwidth
+ */
 int IndexOfHarmonicCoeff(const int m, const int l, const int bw) {
     int bigL = bw - 1;
 
@@ -37,17 +48,23 @@ int IndexOfHarmonicCoeff(const int m, const int l, const int bw) {
     return (((bigL * (bigL + 3)) / 2) + 1 + ((bigL + m) * (bigL + m + 1) / 2) + (l - abs(m)));
 }
 
-/*
-    Multiplies harmonic coefficients of a function and a filter.
-    See convolution theorem of Driscoll and Healy for details.
-
-    bw - bandwidth of problem
-
-    datacoeffs should be output of an SHT, filtercoeffs the
-    output of an ZHT.  There should be (bw * bw) datacoeffs,
-    and bw filtercoeffs.
-    rres and ires should point to arrays of dimension bw * bw.
-*/
+/**
+ * @brief Multiplies harmonic coefficients of a function and a filter.
+ * 
+ * See convolution theorem of Driscoll and Healy for details.
+ *
+ * @param rdatacoeffs real data coefficients
+ * @param idatacoeffs imaginary data coefficients
+ * @param rfiltercoeffs real filter coefficients
+ * @param ifiltercoeffs imaginary filter coefficients
+ * @param rres array of real result
+ * @param ires array of imaginary result
+ * @param bw bandwidth of problem
+ * 
+ * @note @p datacoeffs should be output of an SHT (e.g. FSTSemiMemo())
+ * @note @p filtercoeffs should be output of an SHT (e.g. FZTSemiMemo())
+ * @note All arrays must be of length @c bw*bw
+ */
 void TransMult(double* rdatacoeffs, double* idatacoeffs, double* rfiltercoeffs, double* ifiltercoeffs, double* rres,
                double* ires, const int bw) {
     double* rdptr = rdatacoeffs;
