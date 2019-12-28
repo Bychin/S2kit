@@ -15,7 +15,7 @@
  * where j = 0, 1, ..., 2 B - 1 @endcode
  */
 
-#include "weights.h"
+#include "s2kit/weights.h"
 
 #include <math.h>
 

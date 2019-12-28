@@ -7,7 +7,7 @@
  * For descriptions on calling these functions, see the documentation preceding each function.
  */
 
-#include "FST_semi_memo.h"
+#include "s2kit/FST_semi_memo.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -15,12 +15,12 @@
 
 #include <fftw3.h>
 
-#include "legendre_polynomials/cospml.h"
-#include "legendre_transform/naive.h"
-#include "legendre_transform/seminaive.h"
-#include "legendre_transform/weights.h"
-#include "util/chebyshev_nodes.h"
-#include "util/util.h"
+#include "s2kit/cospml.h"
+#include "s2kit/naive.h"
+#include "s2kit/seminaive.h"
+#include "s2kit/weights.h"
+#include "s2kit/chebyshev_nodes.h"
+#include "s2kit/util.h"
 
 /**
  * @brief Computes <b>spherical harmonic transform</b> using the seminaive and naive algorithms.

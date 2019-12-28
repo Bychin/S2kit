@@ -3,7 +3,7 @@
  * @brief Source code for generating L2-normed associated Legendre functions Pmm.
  */
 
-#include "pmm.h"
+#include "s2kit/pmm.h"
 
 #include <math.h>
 

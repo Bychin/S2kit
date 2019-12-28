@@ -1,6 +1,7 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+// TODO move to source?
 /**
  * @brief Result data format for FST functions.
  *

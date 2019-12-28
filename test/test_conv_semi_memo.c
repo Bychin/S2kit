@@ -45,8 +45,8 @@
 
 #include <fftw3.h>
 
-#include "FST_semi_memo.h"
-#include "legendre_polynomials/cospml.h"
+#include "s2kit/FST_semi_memo.h"
+#include "s2kit/cospml.h"
 
 int main(int argc, char** argv) {
     if (argc < 5) {

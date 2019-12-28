@@ -3,7 +3,7 @@
  * @brief Utils for generating Chebyshev nodes.
  */
 
-#include "chebyshev_nodes.h"
+#include "s2kit/chebyshev_nodes.h"
 
 #include <math.h>
 

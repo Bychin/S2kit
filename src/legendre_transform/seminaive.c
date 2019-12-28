@@ -7,7 +7,7 @@
  * For a description, see the related paper or Sean's thesis. // TODO link
  */
 
-#include "seminaive.h"
+#include "s2kit/seminaive.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -15,7 +15,7 @@
 
 #include <fftw3.h>
 
-#include "legendre_polynomials/cospml.h"
+#include "s2kit/cospml.h"
 
 /**
  * @brief Computes the <b>inverse Legendre transform</b> using the transposed seminaive algorithm.

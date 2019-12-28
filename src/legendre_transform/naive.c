@@ -6,7 +6,7 @@
  * This algorithm is stable and does not require any precomputed functions, but the slowest one.
  */
 
-#include "naive.h"
+#include "s2kit/naive.h"
 
 #include <math.h>
 #include <string.h>

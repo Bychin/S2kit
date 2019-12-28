@@ -51,10 +51,10 @@
 
 #include <fftw3.h>
 
-#include "FST_semi_memo.h"
-#include "legendre_polynomials/cospml.h"
-#include "legendre_transform/weights.h"
-#include "util/util.h"
+#include "s2kit/FST_semi_memo.h"
+#include "s2kit/cospml.h"
+#include "s2kit/weights.h"
+#include "s2kit/util.h"
 
 #include "util/csecond.h"
 

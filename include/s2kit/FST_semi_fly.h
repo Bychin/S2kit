@@ -3,7 +3,7 @@
 
 #include <fftw3.h>
 
-#include "util/util.h"
+#include "s2kit/util.h"
 
 void FSTSemiFly(double*, double*, double*, double*, const int, double*, DataFormat, const int,
                 fftw_plan*, fftw_plan*, double*);

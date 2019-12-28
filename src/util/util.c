@@ -3,7 +3,7 @@
  * @brief Utility functions needed for transforms.
  */
 
-#include "util.h"
+#include "s2kit/util.h"
 
 #include <math.h>
 #include <stdlib.h>

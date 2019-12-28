@@ -6,7 +6,7 @@
  * and utility functions for table management.
  */
 
-#include "cospml.h"
+#include "s2kit/cospml.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -15,10 +15,10 @@
 
 #include <fftw3.h>
 
-#include "util/chebyshev_nodes.h"
+#include "s2kit/chebyshev_nodes.h"
+#include "s2kit/pml.h"
+#include "s2kit/pmm.h"
 
-#include "pml.h"
-#include "pmm.h"
 #include "util/l2_norms.h"
 #include "util/vector_funcs.h"
 

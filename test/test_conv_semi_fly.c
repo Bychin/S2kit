@@ -46,7 +46,7 @@
 
 #include <fftw3.h>
 
-#include "FST_semi_fly.h"
+#include "s2kit/FST_semi_fly.h"
 
 int main(int argc, char** argv) {
 

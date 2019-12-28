@@ -3,16 +3,16 @@
  * @brief Source code for generating table of associated Legendre functions (Pml).
  */
 
-#include "pml.h"
+#include "s2kit/pml.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "util/chebyshev_nodes.h"
+#include "s2kit/chebyshev_nodes.h"
+#include "s2kit/pmm.h"
 
-#include "pmm.h"
 #include "util/l2_norms.h"
 #include "util/vector_funcs.h"
 

@@ -5,7 +5,7 @@ FFTW_INC = -I$(FFTW_DIR)/include
 FFTW_LIB = -L$(FFTW_DIR)/lib -lfftw3
 
 SRC_DIR = src
-SRC_INC = -I$(SRC_DIR)/
+SRC_INC = -Iinclude/ # TODO rename
 
 TEST_DIR = test
 BUILD_DIR = build
