@@ -10,7 +10,7 @@ S2kit is free software and is distributed under the terms of the GNU General Pub
 
 Paper for S2kit 1.0 can be found [here](https://github.com/Bychin/s2kit/blob/master/dist/S2kitHowTo.pdf). I suggest you to read it first. More theoretical exposition can be found in the article "Computing Fourier Transforms and Convolutions on the 2-Sphere" by Driscoll J.R. and Healy D.M.
 
-Full documentation of the library can be found [here](https://bychin.github.io/s2kit/html/index.html).
+Full documentation of the library can be found [here](https://bychin.github.io/S2kit).
 
 The list of core functions:
 
