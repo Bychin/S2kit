@@ -23,7 +23,13 @@ for the JavaScript code in this file
 var NAVTREE =
 [
   [ "S2kit", "index.html", [
-    [ "S2kit", "md__r_e_a_d_m_e.html", null ],
+    [ "S2kit - FFT and Convolution on Sphere", "md__r_e_a_d_m_e.html", [
+      [ "Documentation", "md__r_e_a_d_m_e.html#autotoc_md1", null ],
+      [ "Examples", "md__r_e_a_d_m_e.html#autotoc_md2", [
+        [ "Changelog (from version 1.0)", "md__r_e_a_d_m_e.html#autotoc_md3", null ],
+        [ "Backward compatibility", "md__r_e_a_d_m_e.html#autotoc_md4", null ]
+      ] ]
+    ] ],
     [ "Files", "files.html", [
       [ "File List", "files.html", "files_dup" ],
       [ "Globals", "globals.html", [

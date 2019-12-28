@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.16"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>S2kit: S2kit</title>
+<title>S2kit: S2kit - FFT and Convolution on Sphere</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -88,13 +88,67 @@ $(document).ready(function(){initNavTree('md__r_e_a_d_m_e.html','');});
 
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">S2kit </div>  </div>
+<div class="title">S2kit - FFT and Convolution on Sphere </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><hr  />
-<p>See</p>
-<p>s2kit_fx.pdf</p>
-<p>Authored by Peter J. Kostelec and Dan Rockmore </p>
+<div class="textblock"><p>S2kit, version 1.1, is a library of C functions which compute forward and inverse discrete Fourier transforms, convolutions of functions defined on the sphere <img src="https://latex.codecogs.com/svg.latex?\Large&space;S^2" alt="" title="S^2" class="inline"/>.</p>
+<p>This is an updated version of the library S2kit 1.0, that was initially published there www.cs.dartmouth.edu/~geelong/sphere.</p>
+<p>S2kit is free software and is distributed under the terms of the GNU General Public License.</p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+Documentation</h1>
+<p>Paper for S2kit 1.0 can be found <a href="https://github.com/Bychin/S2kit/blob/master/dist/S2kitHowTo.pdf">here</a>. I suggest you to read it first. More theoretical exposition can be found in the article "Computing Fourier Transforms and Convolutions on the 2-Sphere" by Driscoll J.R. and Healy D.M.</p>
+<p>Full documentation of the library can be found <a href="https://bychin.github.io/S2kit">here</a>.</p>
+<p>The list of core functions:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Name  </th><th class="markdownTableHeadNone">Description   </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/naive_8c.html"><code>DLTNaive()</code></a>  </td><td class="markdownTableBodyNone">Legendre transform using naive algorithm   </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/naive_8c.html"><code>InvDLTNaive()</code></a>  </td><td class="markdownTableBodyNone">Inverse Legendre transform using naive algorithm   </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/seminaive_8c.html"><code>DLTSemi()</code></a>  </td><td class="markdownTableBodyNone">Legendre transform using seminaive algorithm   </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/seminaive_8c.html"><code>InvDLTSemi()</code></a>  </td><td class="markdownTableBodyNone">Inverse Legendre transform using seminaive algorithm   </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html"><code>FSTSemiMemo()</code></a>  </td><td class="markdownTableBodyNone">Spherical harmonic transform   </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html"><code>InvFSTSemiMemo()</code></a>  </td><td class="markdownTableBodyNone">Inverse spherical harmonic transform   </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html"><code>FZTSemiMemo()</code></a>  </td><td class="markdownTableBodyNone">Zonal harmonic transform   </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html"><code>ConvOn2SphereSemiMemo()</code></a>  </td><td class="markdownTableBodyNone">Convolution of two functions defined on the 2-sphere   </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html"><code>FSTSemiFly()</code></a>  </td><td class="markdownTableBodyNone">Spherical harmonic transform   </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html"><code>InvFSTSemiFly()</code></a>  </td><td class="markdownTableBodyNone">Inverse spherical harmonic transform   </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html"><code>FZTSemiFly()</code></a>  </td><td class="markdownTableBodyNone">Zonal harmonic transform   </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><a href="https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html"><code>ConvOn2SphereSemiFly()</code></a>  </td><td class="markdownTableBodyNone">Convolution of two functions defined on the 2-sphere   </td></tr>
+</table>
+<p>In most cases you should prefer to use <code>-Semi()</code> and <code>-Memo()</code> variants of the functions, since they are faster and accept reusing passed arguments (see more info in documentation).</p>
+<h1><a class="anchor" id="autotoc_md2"></a>
+Examples</h1>
+<p>Complete examples can be found in documentation in <code>test</code> directory. It contains examples of call and use functions mentioned above.</p>
+<h2><a class="anchor" id="autotoc_md3"></a>
+Changelog (from version 1.0)</h2>
+<ul>
+<li>All files were formatted via clang-formatter</li>
+<li>Library's file structure was updated<ul>
+<li><code>test_*</code> to <code>test/</code></li>
+<li>headers to <code>include/</code></li>
+<li>sources to <code>src/</code></li>
+<li>data for tests to <code>data/</code></li>
+</ul>
+</li>
+<li>All math consts and functions are imported from <code>&lt;math.h&gt;</code></li>
+<li>All source and test files were refactored in prior to C11 standart and code style</li>
+<li>Due to huge amount of refactoring there were many optimization fixes</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md4"></a>
+Backward compatibility</h2>
+<p>// TODO create md file with history of renaming and moving files/functions </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

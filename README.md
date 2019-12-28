@@ -8,7 +8,7 @@ S2kit is free software and is distributed under the terms of the GNU General Pub
 
 ## Documentation
 
-Paper for S2kit 1.0 can be found [here](https://github.com/Bychin/s2kit/blob/master/dist/S2kitHowTo.pdf). I suggest you to read it first. More theoretical exposition can be found in the article "Computing Fourier Transforms and Convolutions on the 2-Sphere" by Driscoll J.R. and Healy D.M.
+Paper for S2kit 1.0 can be found [here](https://github.com/Bychin/S2kit/blob/master/dist/S2kitHowTo.pdf). I suggest you to read it first. More theoretical exposition can be found in the article "Computing Fourier Transforms and Convolutions on the 2-Sphere" by Driscoll J.R. and Healy D.M.
 
 Full documentation of the library can be found [here](https://bychin.github.io/S2kit).
 
@@ -16,21 +16,18 @@ The list of core functions:
 
 Name | Description
 --- | ---
-[`DLTNaive()`](https://bychin.github.io/s2kit/html/naive_8c.html) | Legendre transform using naive algorithm
-[`InvDLTNaive()`](https://bychin.github.io/s2kit/html/naive_8c.html) | Inverse Legendre transform using naive algorithm
-||
-[`DLTSemi()`](https://bychin.github.io/s2kit/html/seminaive_8c.html) | Legendre transform using seminaive algorithm
-[`InvDLTSemi()`](https://bychin.github.io/s2kit/html/seminaive_8c.html) | Inverse Legendre transform using seminaive algorithm
-||
-[`FSTSemiMemo()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__memo_8c.html) | Spherical harmonic transform
-[`InvFSTSemiMemo()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__memo_8c.html) | Inverse spherical harmonic transform
-[`FZTSemiMemo()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__memo_8c.html) | Zonal harmonic transform
-[`ConvOn2SphereSemiMemo()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__memo_8c.html) | Convolution of two functions defined on the 2-sphere
-||
-[`FSTSemiFly()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__fly_8c.html) | Spherical harmonic transform
-[`InvFSTSemiFly()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__fly_8c.html) | Inverse spherical harmonic transform
-[`FZTSemiFly()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__fly_8c.html) | Zonal harmonic transform
-[`ConvOn2SphereSemiFly()`](https://bychin.github.io/s2kit/html/_f_s_t__semi__fly_8c.html) | Convolution of two functions defined on the 2-sphere
+[`DLTNaive()`](https://bychin.github.io/S2kit/html/naive_8c.html) | Legendre transform using naive algorithm
+[`InvDLTNaive()`](https://bychin.github.io/S2kit/html/naive_8c.html) | Inverse Legendre transform using naive algorithm
+[`DLTSemi()`](https://bychin.github.io/S2kit/html/seminaive_8c.html) | Legendre transform using seminaive algorithm
+[`InvDLTSemi()`](https://bychin.github.io/S2kit/html/seminaive_8c.html) | Inverse Legendre transform using seminaive algorithm
+[`FSTSemiMemo()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html) | Spherical harmonic transform
+[`InvFSTSemiMemo()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html) | Inverse spherical harmonic transform
+[`FZTSemiMemo()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html) | Zonal harmonic transform
+[`ConvOn2SphereSemiMemo()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__memo_8c.html) | Convolution of two functions defined on the 2-sphere
+[`FSTSemiFly()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html) | Spherical harmonic transform
+[`InvFSTSemiFly()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html) | Inverse spherical harmonic transform
+[`FZTSemiFly()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html) | Zonal harmonic transform
+[`ConvOn2SphereSemiFly()`](https://bychin.github.io/S2kit/html/_f_s_t__semi__fly_8c.html) | Convolution of two functions defined on the 2-sphere
 
 In most cases you should prefer to use `-Semi()` and `-Memo()` variants of the functions, since they are faster and accept reusing passed arguments (see more info in documentation).
 
