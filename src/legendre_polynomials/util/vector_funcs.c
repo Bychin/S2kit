@@ -1,5 +1,5 @@
 /**
- * @file l2_norms.c
+ * @file vector_funcs.c
  * @brief Vector arithmetic operations.
  */
 
