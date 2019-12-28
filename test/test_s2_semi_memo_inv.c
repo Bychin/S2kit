@@ -1,52 +1,59 @@
-/*
-    Source code to test *inverse* spherical harmonic transform using the seminaive and naive algorithms
-    coded up during October, 1995.
-
-    In its current state, assuming that will seminaive at *all* orders.
-    If you wish to change this, modify the `cutoff` variable in this file, i.e.
-    `cutoff =` at what order to switch from semi-naive to naive algorithm.
-
-    Note: Code will precompute everything in memory before doing transform.
-
-    Sample call:
-
-    test_s2_semi_memo_inv coeffsFile outputFile bw
-
-    test_s2_semi_memo_inv coeff_bw8.dat samples_bw8.dat 8
-
-    The format of the input coefficient file will be an interleaved real/imaginary parts of the coefficients,
-    where the coefficients are given in "code" order, as defined in, e.g., test_s2_semi_memo:
-
-    f(0,0) f(0,1) f(0,2)       ...       f(0,bw-1)
-           f(1,1) f(1,2)       ...       f(1,bw-1)
-    etc.
-                         f(bw-2,bw-2)    f(bw-2,bw-1)
-                                         f(bw-1,bw-1)
-                                         f(-(bw-1),bw-1)
-                         f(-(bw-2),bw-2) f(-(bw-2),bw-1)
-    etc.
-                  f(-2,2)      ...       f(-2,bw-1)
-          f(-1,1) f(-1,2)      ...       f(-1,bw-1)
-
-    To help you out, the function `IndexOfHarmonicCoeff(m, l, bw)` defined in FST_semi_memo.c,
-    returns the array index of the coefficient f_{l,m} (so you know where it is).
-
-    The format of the input sample file will be an interleaved real/imaginary parts of the function samples
-    arranged in "latitude-major" format, i.e. the function will be sampled in this order:
-
-    (theta_0, phi_0)
-    (theta_0, phi_1)
-    (theta_0, phi_2)
-    ...
-    (theta_0, phi_{bw-1})
-    (theta_1, phi_0)
-    (theta_1, phi_1)
-    ...
-    (theta_{bw-1}, phi_{bw-1})
-
-    where theta_k = pi*(2*j+1)/(4*bw)
-          phi_j = 2*pi*k/(2*bw)
-*/
+/**
+ * @file test_s2_semi_memo_inv.c
+ * @brief Example of source code to computie @b inverse spherical harmonic transform using the
+ * seminaive and naive algorithms.
+ *
+ * Computed function samples using spherical coefficients of the function, which are given in the
+ * named input file, and writes those samples in the named output file.
+ *
+ * The code will <b>pre-compute</b> associated Legendre functions before doing inverse transform.
+ * This @b won't a be part of what's being timed.
+ *
+ * In its current state, assuming that will seminaive at @b all orders. If you wish to change this,
+ * modify the @p cutoff variable in this file, i.e. <tt>cutoff = ...</tt> at what order to switch
+ * from seminaive to naive algorithm.
+ *
+ * Sample call:
+ * @code
+ * test_s2_semi_memo_inv coeffs_file   output_file     bw
+ * test_s2_semi_memo_inv coeff_bw8.dat samples_bw8.dat 8
+ * @endcode
+ *
+ * The format of the input coefficient file is an interleaved real/imaginary parts of the
+ * coefficients, where the coefficients are given in "code" order, as defined in
+ * test_s2_semi_memo.c:
+ * @code
+ * f(0,0) f(0,1) f(0,2)       ...       f(0,bw-1)
+ *        f(1,1) f(1,2)       ...       f(1,bw-1)
+ * etc.
+ *                      f(bw-2,bw-2)    f(bw-2,bw-1)
+ *                                      f(bw-1,bw-1)
+ *                                      f(-(bw-1),bw-1)
+ *                      f(-(bw-2),bw-2) f(-(bw-2),bw-1)
+ * etc.
+ *               f(-2,2)      ...       f(-2,bw-1)
+ *       f(-1,1) f(-1,2)      ...       f(-1,bw-1)
+ * @endcode
+ * To help you out, there is a function IndexOfHarmonicCoeff() which returns the array
+ * index of the coefficient <tt>f_{l,m}</tt>.
+ *
+ * The format of the output sample file is an interleaved real/imaginary parts of the function
+ * samples arranged in "latitude-major" format, i.e. the function is sampled in this order:
+ * @code
+ * (theta_0,      phi_0)
+ * (theta_0,      phi_1)
+ * (theta_0,      phi_2)
+ *           ...
+ * (theta_0,      phi_{bw-1})
+ * (theta_1,      phi_0)
+ * (theta_1,      phi_1)
+ *           ...
+ * (theta_{bw-1}, phi_{bw-1})
+ *
+ * where theta_k = pi*(2*j+1)/(4*bw)
+ *         phi_j = 2*pi*k/(2*bw)
+ * @endcode
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -64,7 +71,7 @@
 
 int main(int argc, char** argv) {
     if (argc < 4) {
-        fprintf(stdout, "Usage: test_s2_semi_memo_inv coeffsFile outputFile bw\n");
+        fprintf(stdout, "Usage: test_s2_semi_memo_inv coeffs_file output_file bw\n");
         exit(0);
     }
 

@@ -1,47 +1,47 @@
-/*
-    Source code to test full spherical harmonic transform using the seminaive and naive algorithms
-    coded up during October, 1995.
-
-    In its current state, assuming that will seminaive at *all* orders.
-    If you wish to change this, modify the `cutoff` variable in this file, i.e.
-    `cutoff =` at what order to switch from semi-naive to naive algorithm
-
-    NOTE: Code will compute associated Legendre functions on the fly. This will be part of what's being timed.
-
-    Idea is to record the execution time for the spectral -> grid -> spectral roundtrip,
-    after precomputations have been done.
-
-    The strategy is to generate random coefficients representing a complete spherical harmonic series
-    of funcions Y(m,l). The ordering of the these coefficients is assumed to be the same as that of the
-    output of the FST_seminaive() routine, namely:
-
-    f(0,0) f(0,1) f(0,2)       ...       f(0,bw-1)
-           f(1,1) f(1,2)       ...       f(1,bw-1)
-    etc.
-                         f(bw-2,bw-2)    f(bw-2,bw-1)
-                                         f(bw-1,bw-1)
-                                         f(-(bw-1),bw-1)
-                         f(-(bw-2),bw-2) f(-(bw-2),bw-1)
-    etc.
-                  f(-2,2)      ...       f(-2,bw-1)
-          f(-1,1) f(-1,2)      ...       f(-1,bw-1)
-
-    This means that there are (bw*bw) coefficients.
-
-    Once the coefficients are generated, the corresponding function is synthesized using InvFSTSemiFly(),
-    then transformed (analyzed) using FSTSemiFly(). Timing data is printed.
-
-    Sample call:
-
-    test_s2_semi_fly bw loops [error_file]
-
-    Appropriate timimg data will be printed out.
-
-    NOTE: In this program, the coefficients generated are such that the grid points (sample values) produced are *real*.
-    The routines InvFSTSemiFly() and FSTSemiFly() will take advantage of this. If you wish to change this,
-    change the 7th argument of each function further down from "1" to "0".
-    This is also documented in the file FST_semi_fly.c
-*/
+/**
+ * @file test_s2_semi_fly.c
+ * @brief Example of source code to computie spherical harmonic transform using the seminaive and
+ * naive algorithms.
+ *
+ * The code will compute associated Legendre functions <b>on the fly</b>. This will be part of
+ * what's being timed.
+ *
+ * In its current state, assuming that will seminaive at @b all orders. If you wish to change this,
+ * modify the @p cutoff variable in this file, i.e. <tt>cutoff = ...</tt> at what order to switch
+ * from seminaive to naive algorithm.
+ *
+ * Idea is to record the execution time for the <tt>spectral -> grid -> spectral</tt> roundtrip.\n
+ * The strategy is to generate random coefficients representing a complete spherical harmonic
+ * series of funcions <tt>Y(m,l)</tt>. The ordering of the these coefficients is assumed to be the
+ * same as an output of the FSTSemiFly() function, namely:
+ * @code
+ * f(0,0) f(0,1) f(0,2)       ...       f(0,bw-1)
+ *        f(1,1) f(1,2)       ...       f(1,bw-1)
+ * etc.
+ *                      f(bw-2,bw-2)    f(bw-2,bw-1)
+ *                                      f(bw-1,bw-1)
+ *                                      f(-(bw-1),bw-1)
+ *                      f(-(bw-2),bw-2) f(-(bw-2),bw-1)
+ * etc.
+ *               f(-2,2)      ...       f(-2,bw-1)
+ *       f(-1,1) f(-1,2)      ...       f(-1,bw-1)
+ * @endcode
+ * This means that there are <tt>(bw*bw)</tt> coefficients.
+ *
+ * Once the coefficients are generated, the corresponding function is synthesized using
+ * InvFSTSemiFly(), then transformed (analyzed) using FSTSemiFly(). Then timing data will be
+ * printed.
+ *
+ * Sample call:
+ * @code
+ * test_s2_semi_fly bw loops [error_file]
+ * @endcode
+ *
+ * @note In this program, the coefficients generated are such that the grid points (sample values)
+ * produced are @b real. InvFSTSemiFly() and FSTSemiFly() will take advantage of this. If you wish
+ * to change this, change the @p data_format argument of each function further down from @p REAL to
+ * @p COMPLEX. This is also documented in the file FST_semi_fly.c
+ */
 
 #include <math.h>
 #include <stdio.h>

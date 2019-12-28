@@ -1,43 +1,45 @@
-/*
-    Source code to convolve two functions defined on the 2-sphere. Uses seminaive algorithms.
-    Precomputes all necessary data in memory prior to transfoming.
-
-    Reads in a function and filter from files specified at shell level, and dumps output into a specified file.
-    Both function and filter must be (size*size) arrays, where size = 2*bandwidth.
-
-    Sample call:
-
-    test_conv_semi_fly signalFile filterFile convolveFile bandwidth
-
-    test_conv_semi_fly s64.dat f64.dat c64.dat 64
-
-
-    In this example, the signal and filter function samples are stored in the files:
-
-    s64.dat ( signal - for bandwidth = 64 )
-    f64.dat ( filter - for bandwidth = 64 )
-
-    s128.dat ( signal - for bandwidth = 128 )
-    f128.dat ( filter - for bandwidth = 128 )
-
-    The signal is a "noisey" bump on the sphere, and the filter is a smooth, symmetric bump at the north pole.
-
-    The samples for each are in "latitude-major" format. I.e.
-    (theta_0, phi_0)
-    (theta_0, phi_1)
-    (theta_0, phi_2)
-    ...
-    (theta_0, phi_{bw-1})
-    (theta_1, phi_0)
-    (theta_1, phi_1)
-    ...
-    (theta_{bw-1}, phi_{bw-1})
-
-    where theta_k = pi*(2*j+1)/(4*bw)
-          phi_j = 2*pi*k/(2*bw)
-
-    The *location* of the maximum value in the output file tells me where the bump is.
-*/
+/**
+ * @file test_conv_semi_memo.c
+ * @brief Example of source code to convolve two real-valued functions defined on the 2-sphere.
+ * Uses seminaive algorithms.
+ *
+ * <b>Precomputes</b> all necessary data in memory prior to transforming.\n
+ * Reads in a function and filter from files specified at shell level, and dumps output into a
+ * specified file.
+ * @note Both function and filter must be <tt>4*bw*bw</tt> arrays.
+ *
+ * Sample call:
+ * @code
+ * test_conv_semi_memo signal_file filter_file output_file bandwidth
+ * test_conv_semi_memo s64.dat     f64.dat     o64.dat     64
+ * @endcode
+ * In this example, the signal and filter function samples are stored in the files:\n
+ * <tt>s64.dat</tt> (signal for <tt>bandwidth = 64</tt>)\n
+ * <tt>f64.dat</tt> (filter for <tt>bandwidth = 64</tt>)\n
+ * <tt>s128.dat</tt> (signal for <tt>bandwidth = 128</tt>)\n
+ * <tt>f128.dat</tt> (filter for <tt>bandwidth = 128</tt>)\n
+ *
+ * The signal is a "noisy" bump on the sphere, and the filter is a smooth, symmetric bump at the
+ * north pole.
+ *
+ * The samples for each are stored in "latitude-major" format. I.e.
+ * @code
+ * (theta_0,      phi_0)
+ * (theta_0,      phi_1)
+ * (theta_0,      phi_2)
+ *           ...
+ * (theta_0,      phi_{bw-1})
+ * (theta_1,      phi_0)
+ * (theta_1,      phi_1)
+ *           ...
+ * (theta_{bw-1}, phi_{bw-1})
+ *
+ * where theta_k = pi*(2*j+1)/(4*bw)
+ *         phi_j = 2*pi*k/(2*bw)
+ * @endcode
+ *
+ * The location of the maximum value in the output file tells us where the bump is.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,20 +1,21 @@
-/*
-    test_naive.c - top-level code for computing forward and inversee
-    Legendre transforms using the naive algorithm; will return timing
-    and error information
-
-    m     - order of the problem
-    bw    - bandwidth
-    loops - number of loops thru timed portion of code. Intended
-            to reduce noise due to multiprocessing and
-            discretization errors
-
-    Sample calls:
-
-    test_naive m bw loops
-
-    test_naive 0 32 10
-*/
+/**
+ * @file test_DLT_naive.c
+ * @brief Example of source code to computie forward and inverse Legendre transforms using the
+ * naive algorithm.
+ *
+ * Prints timing and error information.
+ *
+ * Sample call:
+ * @code
+ * test_DLT_naive m bw loops
+ * test_DLT_naive 0 32 10
+ * @endcode
+ * where
+ * @param m order of the problem
+ * @param bw bandwidth
+ * @param loops number of loops thru timed portion of code, intended to reduce noise due to
+ * multiprocessing and discretization errors
+ */
 
 #include <math.h>
 #include <stdio.h>

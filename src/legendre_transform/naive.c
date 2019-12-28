@@ -16,6 +16,8 @@
  *
  * Computes the discrete Legendre transform of a function via summing naively.
  * I.e. this is the <b>forward discrete Legendre transform</b>.
+ * 
+ * @note See an example of use in test_DLT_naive.c
  *
  * @param data array of size @c 2*bw containing the sample points
  * @param bw bandwidth
@@ -61,6 +63,8 @@ void DLTNaive(double* data, const int bw, const int m, double* weights, double* 
  *
  * Synthesizes a function from a list of coefficients of a Legendre series.
  * I.e. this is the <b>inverse discrete Legendre transform</b>.
+ *
+ * @note See an example of use in test_DLT_naive.c
  *
  * @param coeffs array of size @c bw-m. The first coefficient is for Pmm
  * @param bw bandwidth

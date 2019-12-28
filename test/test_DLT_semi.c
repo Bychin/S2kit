@@ -1,14 +1,21 @@
-/*
-    test_semi.c - top-level code for computing Legendre transform using the
-    seminaive algorithm; will do forward and inverse DLTs, and return
-    error and timing results
-
-    m     - order of the problem
-    bw    - bandwidth
-    loops - number of loops thru timed portion of code. Intended
-            to reduce noise due to multiprocessing and
-            discretization errors
-*/
+/**
+ * @file test_DLT_semi.c
+ * @brief Example of source code to computie forward and inverse Legendre transforms using the
+ * seminaive algorithm.
+ *
+ * Prints timing and error information.
+ *
+ * Sample call:
+ * @code
+ * test_DLT_semi m bw loops
+ * test_DLT_semi 0 32 10
+ * @endcode
+ * where
+ * @param m order of the problem
+ * @param bw bandwidth
+ * @param loops number of loops thru timed portion of code, intended to reduce noise due to
+ * multiprocessing and discretization errors
+ */
 
 #include <math.h>
 #include <stdio.h>

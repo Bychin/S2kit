@@ -1,50 +1,57 @@
-/*
-    Source code to test *forward* spherical harmonic transform using the seminaive and naive algorithms
-    coded up during October, 1995. It will compute the spherical coefficients of the function, whose
-    sample values are given in the named input file, and will write those coefficients in the named
-    output file.
-
-    In its current state, assuming that will seminaive at *all* orders.
-    If you wish to change this, modify the `cutoff` variable in this file, i.e.
-    `cutoff =` at what order to switch from semi-naive to naive algorithm.
-
-    Note: Code will precompute everything in memory before doing transform.
-
-    Sample call:
-
-    test_s2_semi_memo_for sampleFile outputFile bw [output_format]
-
-    test_s2_semi_memo_for y31_bw8.dat y31_coef.dat 8
-
-    output_format is an optional argument:
-        0 - coefficients in "code" order (interleaved real/imaginary), i.e. suitable for test_s2_semi_memo_inv;
-        1 - coefficients in prettier "human" order (verbose), i.e. if f_{l,m} is the coefficient
-            of degree l, order m, then the coefficients will be arranged this way:
-            f_{0,0},
-            f_{1,-1}, f_{1,0}, f_{1,1},
-            f_{2,-2}, f_{2,-1}, f_{2,0}, f_{2,1}, f_{2,2},
-            ...
-            E.g. l = 2  m = 1  2.3 + 6 I.
-
-    The default output format is "code" order. To help you out, the function `IndexOfHarmonicCoeff(m, l, bw)`
-    defined in src/util/util.c, returns the array index of the coefficient f_{l,m}.
-
-    The format of the input sample file will be an interleaved real/imaginary parts of the function samples
-    arranged in "latitude-major" format, i.e. the function will be sampled in this order:
-
-    (theta_0, phi_0)
-    (theta_0, phi_1)
-    (theta_0, phi_2)
-    ...
-    (theta_0, phi_{bw-1})
-    (theta_1, phi_0)
-    (theta_1, phi_1)
-    ...
-    (theta_{bw-1}, phi_{bw-1})
-
-    where theta_k = pi*(2*j+1)/(4*bw)
-          phi_j = 2*pi*k/(2*bw)
-*/
+/**
+ * @file test_s2_semi_memo_fwd.c
+ * @brief Example of source code to computie @b forward spherical harmonic transform using the
+ * seminaive and naive algorithms.
+ *
+ * Computes the spherical coefficients of the function, whose sample values are given in the named
+ * input file, and writes those coefficients in the named output file.
+ *
+ * The code will <b>pre-compute</b> associated Legendre functions before doing transform. This
+ * @b won't a be part of what's being timed.
+ *
+ * In its current state, assuming that will seminaive at @b all orders. If you wish to change this,
+ * modify the @p cutoff variable in this file, i.e. <tt>cutoff = ...</tt> at what order to switch
+ * from seminaive to naive algorithm.
+ *
+ * Sample call:
+ * @code
+ * test_s2_semi_memo_fwd sample_file output_file  bw [output_format]
+ * test_s2_semi_memo_fwd y31_bw8.dat y31_coef.dat 8
+ * @endcode
+ *
+ * The format of the input sample file will be an interleaved real/imaginary parts of the function
+ * samples arranged in "latitude-major" format, i.e. the function will be sampled in this order:
+ * @code
+ * (theta_0,      phi_0)
+ * (theta_0,      phi_1)
+ * (theta_0,      phi_2)
+ *           ...
+ * (theta_0,      phi_{bw-1})
+ * (theta_1,      phi_0)
+ * (theta_1,      phi_1)
+ *           ...
+ * (theta_{bw-1}, phi_{bw-1})
+ *
+ * where theta_k = pi*(2*j+1)/(4*bw)
+ *         phi_j = 2*pi*k/(2*bw)
+ * @endcode
+ *
+ * @p output_format is an optional argument:\n
+ * @c 0 - coefficients in "code" order (interleaved real/imaginary), i.e. suitable for
+ * test_s2_semi_memo_inv.c;\n
+ * @c 1 - coefficients in prettier "human" order (verbose), i.e. if <tt>f_{l,m}</tt> is the
+ * coefficient of degree @c l, order @c m, then the coefficients will be arranged this way:
+ * @code
+ * f_{0,0},
+ * f_{1,-1}, f_{1,0},  f_{1,1},
+ * f_{2,-2}, f_{2,-1}, f_{2,0}, f_{2,1}, f_{2,2},
+ * ...
+ * E.g. l = 2  m = 1  2.3 + 6 I.
+ * @endcode
+ * The default output format is "code" order. To help you out, there is a function
+ * IndexOfHarmonicCoeff() which returns the array index of the coefficient
+ * <tt>f_{l,m}</tt>.
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -63,7 +70,7 @@
 
 int main(int argc, char** argv) {
     if (argc < 4) {
-        fprintf(stdout, "Usage: test_s2_semi_memo_fwd sampleFile outputFile bw "
+        fprintf(stdout, "Usage: test_s2_semi_memo_fwd sample_file output_file bw "
                         "[output_format]\n");
         exit(0);
     }
@@ -71,7 +78,7 @@ int main(int argc, char** argv) {
     int bw = atoi(argv[3]);
 
     int size = 2 * bw;
-    int cutoff = bw; // seminaive all orders
+    int cutoff = bw; // seminaive all orders // TODO?
     DataFormat data_format = COMPLEX;
 
     double* workspace = (double*)malloc(sizeof(double) * ((8 * (bw * bw)) + (7 * bw)));

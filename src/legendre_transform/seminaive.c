@@ -20,6 +20,8 @@
 /**
  * @brief Computes the <b>inverse Legendre transform</b> using the transposed seminaive algorithm.
  *
+ * @note See an example of use in test_DLT_semi.c
+ *
  * Because the Legendre transform is orthogonal, the inverse can be computed by transposing the
  * matrix formulation of the problem.
  * 
@@ -114,6 +116,8 @@ void InvDLTSemi(double* coeffs, const int bw, const int m, double* result, doubl
 
 /**
  * @brief Computes the <b>Legendre transform</b> of data using the seminaive algorithm.
+ *
+ * @note See an example of use in test_DLT_semi.c
  *
  * The forward transform looks like:
  * @code l = PCWf @endcode

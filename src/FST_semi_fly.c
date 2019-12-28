@@ -45,6 +45,8 @@
  * then you need a an <tt>(2bw-1)*bw</tt> array, but that is not done here. Because of the amount
  * of space necessary for doing large transforms, it is important not to use any more than
  * necessary.
+ * 
+ * @note See an example of use in test_s2_semi_fly.c
  *
  * @param rdata array of length <tt>4*bw*bw</tt> of the real part of the function samples
  * @param idata array of length <tt>4*bw*bw</tt> of the imaginary part of the function samples
@@ -210,6 +212,8 @@ void FSTSemiFly(double* rdata, double* idata, double* rcoeffs, double* icoeffs, 
 
 /**
  * @brief Computes <b>inverse spherical harmonic transform</b>.
+ *
+ * @note See an example of use in test_s2_semi_fly.c
  *
  * @param rcoeffs array of length <tt>bw*bw</tt> of the real part of harmonic coefficients
  * @param icoeffs array of length <tt>bw*bw</tt> of the imaginary part of harmonic coefficients
@@ -423,7 +427,10 @@ void FZTSemiFly(double* rdata, double* idata, double* rres, double* ires, const 
 /**
  * @brief <b>Convolves</b> two functions defined on the 2-sphere.
  *
- * Uses seminaive algorithms for spherical harmonic transforms.\n
+ * Uses seminaive algorithms for spherical harmonic transforms.
+ *
+ * @note See an example of use in test_conv_semi_fly.c
+ *
  * Memory requirements for Conv2Sphere:\n
  * @code
  * 4*bw^2 + 2*bw + 10*bw^2 + 24*bw = 14*bw^2 + 26*bw
