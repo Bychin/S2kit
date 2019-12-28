@@ -4,8 +4,8 @@ FFTW_DIR = /usr/local
 FFTW_INC = -I$(FFTW_DIR)/include
 FFTW_LIB = -L$(FFTW_DIR)/lib -lfftw3
 
-SRC_DIR = src
-SRC_INC = -Iinclude/ # TODO rename
+KIT_DIR = src
+KIT_INC = -Iinclude/
 
 TEST_DIR = test
 BUILD_DIR = build
@@ -13,7 +13,7 @@ BIN_DIR = bin
 
 # define WALLCLOCK on the CFLAGS line for walltime instead of cpu time (default)
 # -U__STRICT_ANSI__ - math constants (e.g. M_PI) for GCC
-CFLAGS = -O3 $(FFTW_INC) $(SRC_INC) -std=c11 -m64 -fPIC -U__STRICT_ANSI__
+CFLAGS = -O3 $(FFTW_INC) $(KIT_INC) -std=c11 -m64 -fPIC -U__STRICT_ANSI__
 
 LDFLAGS = -lm -m64 -fPIC
 
@@ -68,6 +68,9 @@ clean:
 	rm -rf $(BIN_DIR)
 	rm -rf $(BUILD_DIR)
 
+doc:
+	doxygen ./Doxyfile
+
 
 # make definitions for the individual executables
 
@@ -107,40 +110,40 @@ test_conv_semi_fly: $(CONV_SEMI_OBJ) FST_semi_fly.o test_conv_semi_fly.o
 # explicit rule for every file to be compiled in BUILD_DIR
 
 FST_semi_fly.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/FST_semi_fly.o $(SRC_DIR)/FST_semi_fly.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/FST_semi_fly.o $(KIT_DIR)/FST_semi_fly.c
 
 FST_semi_memo.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/FST_semi_memo.o $(SRC_DIR)/FST_semi_memo.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/FST_semi_memo.o $(KIT_DIR)/FST_semi_memo.c
 
 cospml.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/cospml.o $(SRC_DIR)/legendre_polynomials/cospml.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/cospml.o $(KIT_DIR)/legendre_polynomials/cospml.c
 
 pml.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pml.o $(SRC_DIR)/legendre_polynomials/pml.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pml.o $(KIT_DIR)/legendre_polynomials/pml.c
 
 pmm.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pmm.o $(SRC_DIR)/legendre_polynomials/pmm.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/pmm.o $(KIT_DIR)/legendre_polynomials/pmm.c
 
 l2_norms.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/l2_norms.o $(SRC_DIR)/legendre_polynomials/util/l2_norms.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/l2_norms.o $(KIT_DIR)/legendre_polynomials/util/l2_norms.c
 
 vector_funcs.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/vector_funcs.o $(SRC_DIR)/legendre_polynomials/util/vector_funcs.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/vector_funcs.o $(KIT_DIR)/legendre_polynomials/util/vector_funcs.c
 
 naive.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/naive.o $(SRC_DIR)/legendre_transform/naive.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/naive.o $(KIT_DIR)/legendre_transform/naive.c
 
 seminaive.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/seminaive.o $(SRC_DIR)/legendre_transform/seminaive.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/seminaive.o $(KIT_DIR)/legendre_transform/seminaive.c
 
 weights.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/weights.o $(SRC_DIR)/legendre_transform/weights.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/weights.o $(KIT_DIR)/legendre_transform/weights.c
 
 chebyshev_nodes.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/chebyshev_nodes.o $(SRC_DIR)/util/chebyshev_nodes.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/chebyshev_nodes.o $(KIT_DIR)/util/chebyshev_nodes.c
 
 util.o:
-	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/util.o $(SRC_DIR)/util/util.c
+	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/util.o $(KIT_DIR)/util/util.c
 
 csecond.o:
 	$(CC) $(CFLAGS) -c -o $(BUILD_DIR)/csecond.o $(TEST_DIR)/util/csecond.c
